@@ -218,8 +218,8 @@ namespace WebApp.DAL
                 }
             }
         }
-
-        public int AddProposal(ProposalViewModel proposal, int lecturerId, int courseId)
+        
+        public void AddProposal(ProposalViewModel proposal, int lecturerId, int courseId)
         {
             using (var connection = GetConnection())
             {
@@ -239,6 +239,8 @@ namespace WebApp.DAL
                 p.Add("@inTargetAudience", proposal.TargetAudience, dbType: DbType.String, size: 500);
                 p.Add("@inMainFunction", proposal.MainFunction, dbType: DbType.String, size: 500);
                 p.Add("@inHardwareAndSoftwareRequirements", proposal.HardwareAndSoftwareConfiguration, dbType: DbType.String, size: 500);
+				p.Add("@inDeadline", DateTime.Parse(proposal.Schedule).AddMonths(3).ToString(), dbType: DbType.String, size: 500);
+                
                 p.Add("@inSchedule", proposal.Schedule, dbType: DbType.String, size: 500);
 
                 DateTime dt = DateTime.Now;
@@ -260,16 +262,8 @@ namespace WebApp.DAL
 
 
                 p.Add("@inSubmittedOn", proposal.SubmittedDate, dbType: DbType.DateTime);
-                p.Add("@outDuplTitle", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 connection.Execute("usp_addExternalProject", p, commandType: CommandType.StoredProcedure);
-
-
-                if (p.Get<int>("@outDuplTitle") > 0)
-                {
-                    return 1;
-                }
-
-                return 0;
+                
             }
         }
       

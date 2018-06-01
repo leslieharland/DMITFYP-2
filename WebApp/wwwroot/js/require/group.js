@@ -15,11 +15,11 @@
         data: viewModel,
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             $("#groupTable tbody").html("");
             $("#groupTable tbody").append("<tr><td colspan='7'>Sorry, no students are shown as a HTTP " + xhr.status + " " + xhr.statusText + " error has occured. Please contact your system administrator for assistance.</td></tr>");
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             if (result.error != undefined) {
                 $("#groupTable tbody").html("");
                 $("#groupTable tbody").append("<tr><td colspan='7'>Sorry, no students are shown as the following error occured; " + result.error + " Please contact your system administrator for assistance.</td></tr>");
@@ -131,11 +131,11 @@
 }
 
 function wireViewGroupsEventHandlers() {
-    $(".groupRoleDropDownList").change(function () {
+    $(".groupRoleDropDownList").change(function() {
         var currentDropDownList = $(this);
         var currentDropDownListIndex = $(".groupRoleDropDownList").index($(this))
         if ($(this).find(":selected").text() == "Leader") {
-            $.each($(".groupRoleDropDownList"), function (index, value) {
+            $.each($(".groupRoleDropDownList"), function(index, value) {
                 if (index != currentDropDownListIndex) {
                     if ($(value).find(":selected").text() == "Leader") {
                         $(value).val("3");
@@ -148,7 +148,7 @@ function wireViewGroupsEventHandlers() {
                 }
             });
         } else if ($(this).find(":selected").text() == "Assistant Leader") {
-            $.each($(".groupRoleDropDownList"), function (index, value) {
+            $.each($(".groupRoleDropDownList"), function(index, value) {
                 if (index != currentDropDownListIndex) {
                     if ($(value).find(":selected").text() == "Assistant Leader") {
                         $(value).val("3");
@@ -167,16 +167,16 @@ function wireViewGroupsEventHandlers() {
         $("#confirmChangeGroupRolesModal").modal();
     });
 
-    $(".deleteGroupButton").click(function () {
+    $(".deleteGroupButton").click(function() {
         $("#confirmDeleteGroupModal").modal();
     });
 
-    $(".deleteGroupMemberButton").click(function () {
+    $(".deleteGroupMemberButton").click(function() {
         $("#studentIdDeleteGroupMemberHiddenField").val((($(this).attr("id")).split("studentIdDeleteGroupMember"))[0]);
         $("#confirmDeleteGroupMemberModal").modal();
     });
 
-    $(".addGroupMembersButton").click(function () {
+    $(".addGroupMembersButton").click(function() {
         $("#chooseGroupMembersToAddModal").modal();
     });
 }
@@ -190,13 +190,13 @@ function cancelAssignSupervisor() {
 }
 
 function cancelAddGroupMembers() {
-    $.each($(".studentCheckBox"), function (index, value) {
+    $.each($(".studentCheckBox"), function(index, value) {
         $(value).attr("checked", false);
     });
 }
 
 function cancelChangeGroupRoles() {
-    $.each($(".groupRoleDropDownList"), function (index, value) {
+    $.each($(".groupRoleDropDownList"), function(index, value) {
         $(value).val($("#previous" + $(value).attr("id").split("studentIdGroupRole")[0] + "studentIdGroupRoleHiddenField").val());
     });
 
@@ -224,17 +224,17 @@ function AJAXChangeGroupRoles() {
         traditional: true,
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             configureAlertPaneMessageError(xhr, alertClass);
 
             $("#globalAlertPane").removeClass("hidden");
-            $.each($(".groupRoleDropDownList"), function (index, value) {
+            $.each($(".groupRoleDropDownList"), function(index, value) {
                 $(value).val($("#previous" + $(value).attr("id").split("studentIdGroupRole")[0] + "studentIdGroupRoleHiddenField").val());
             });
             $("#studentIdGroupRoleOneHiddenField").val("");
             $("#studentIdGroupRoleTwoHiddenField").val("");
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             configureAlertPaneMessageSuccess(result, alertClass, "group member", "updated");
 
             $("#globalAlertPane").removeClass("hidden");
@@ -254,12 +254,12 @@ function AJAXDeleteGroup() {
         },
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             configureAlertPaneMessageError(xhr, alertClass);
 
             $("#globalAlertPane").removeClass("hidden");
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             configureAlertPaneMessageSuccess(result, alertClass, "group", "deleted");
 
             $("#globalAlertPane").removeClass("hidden");
@@ -277,12 +277,12 @@ function AJAXDeleteGroupMember() {
         },
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             configureAlertPaneMessageError(xhr, alertClass);
 
             $("#globalAlertPane").removeClass("hidden");
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             configureAlertPaneMessageSuccess(result, alertClass, "group member", "deleted");
 
             $("#globalAlertPane").removeClass("hidden");
@@ -296,7 +296,7 @@ function AJAXAddGroupMembers(groupMembersToAdd) {
     var temporaryStoreRowsAffected;
     if (groupMembersToAdd.length == 0) return;
     var inStudentIds = [];
-    $.each(groupMembersToAdd, function (index, value) {
+    $.each(groupMembersToAdd, function(index, value) {
         inStudentIds.push($(value).attr("id").split("studentIdGroup")[0]);
     });
     $.ajax({
@@ -308,12 +308,12 @@ function AJAXAddGroupMembers(groupMembersToAdd) {
         },
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             configureAlertPaneMessageError(xhr, alertClass);
 
             $("#globalAlertPane").removeClass("hidden");
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             configureAlertPaneMessageSuccess(result, alertClass, "group member", "added");
             $("#globalAlertPane").removeClass("hidden");
 
@@ -346,13 +346,13 @@ function AJAXAssignProject() {
         },
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             configureAlertPaneMessageError(xhr, alertClass);
             $("#globalAlertPane").removeClass("hidden");
 
             $("#projectToAssign").val($("#previousProjectToAssignHiddenField").val());
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             configureAlertPaneMessageSuccess(result, alertClass, "group", "updated");
             $("#globalAlertPane").removeClass("hidden");
 
@@ -374,13 +374,13 @@ function AJAXAssignSupervisor() {
         },
         dataType: "json",
         type: "GET",
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
             configureAlertPaneMessageError(xhr, alertClass);
             $("#globalAlertPane").removeClass("hidden");
 
             $("#supervisorToAssign").val($("#previousSupervisorToAssignHiddenField").val());
         },
-        success: function (result, status, xhr) {
+        success: function(result, status, xhr) {
             configureAlertPaneMessageSuccess(result, alertClass, "group", "updated");
             $("#globalAlertPane").removeClass("hidden");
 
@@ -392,11 +392,11 @@ function AJAXAssignSupervisor() {
     });
 }
 
-$("document").ready(function () {
-    $("#downloadProjectSelectionSpreadsheetButton").on("click", function () {
+$("document").ready(function() {
+    $("#downloadProjectSelectionSpreadsheetButton").on("click", function() {
         $(this).button("loading");
         window.location.href = "/Group/DownloadProjectSelectionSpreadsheet"
-        var downloadProgressTimer = window.setInterval(function () {
+        var downloadProgressTimer = window.setInterval(function() {
             if (getCookie("completedDownloadToken") == "downloaded") {
                 $("#downloadProjectSelectionSpreadsheetButton").button("reset");
                 setCookie("completedDownloadToken", "initial");
@@ -407,38 +407,38 @@ $("document").ready(function () {
 
     wireViewGroupsEventHandlers();
 
-    $("#leftArrowViewGroup").click(function () {
+    $("#leftArrowViewGroup").click(function() {
         var c = $("#groupNumberIndicationSpan").text().split(" ")[0];
         refreshGroupTable(c, "backward");
     });
 
-    $("#rightArrowViewGroup").click(function () {
+    $("#rightArrowViewGroup").click(function() {
         var c = $("#groupNumberIndicationSpan").text().split(" ")[0];
         refreshGroupTable(c, "forward");
     });
 
-    $("#projectToAssign").change(function () {
+    $("#projectToAssign").change(function() {
         $("#confirmAssignSupervisorOrProjectButton").attr("onclick", "AJAXAssignProject()");
         $("#cancelAssignSupervisorOrProjectButton").attr("onclick", "cancelAssignProject()");
         $("#confirmAssignSupervisorOrProjectModal").modal();
     })
-    $("#supervisorToAssign").change(function () {
+    $("#supervisorToAssign").change(function() {
         $("#confirmAssignSupervisorOrProjectButton").attr("onclick", "AJAXAssignSupervisor()");
         $("#cancelAssignSupervisorOrProjectButton").attr("onclick", "cancelAssignSupervisor()");
         $("#confirmAssignSupervisorOrProjectModal").modal();
     });
 
-    $("#addGroupButton").click(function () {
+    $("#addGroupButton").click(function() {
         alertClass = getCurrentAlertClass();
         $.ajax({
             url: "/Group/AddGroup",
             type: "GET",
             dataType: "json",
-            error: function (xhr, status, error) {
+            error: function(xhr, status, error) {
                 configureAlertPaneMessageError(xhr, alertClass);
                 $("#globalAlertPane").removeClass("hidden");
             },
-            success: function (result, status, xhr) {
+            success: function(result, status, xhr) {
                 configureAlertPaneMessageSuccess(result, alertClass, "group", "added");
                 $("#globalAlertPane").removeClass("hidden");
 

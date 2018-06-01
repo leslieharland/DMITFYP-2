@@ -15,7 +15,6 @@
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
     <PackageReference Include="Dapper" Version="1.50.4" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.8.1" />
-    <PackageReference Include="ChameleonForms" Version="3.0.2" />
     <PackageReference Include="DocX" Version="1.1.0" />
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="Sendgrid" Version="9.9.0" />
@@ -64,8 +63,6 @@
     <None Include="Views\Home\_MemberGroupJoiningRequest.cshtml" />
     <None Include="wwwroot\js\jquery\jquery.min.js" />
     <None Include="wwwroot\css\bootstrap.css" />
-    <None Include="Controllers\ProjectController.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
-    <None Include="Controllers\GroupController.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
     <None Include="wwwroot\lib\site\app.min.css" />
     <None Include="wwwroot\lib\site\app.min.js" />
   </ItemGroup>
@@ -76,8 +73,6 @@
     <Compile Remove="ViewModels\AccountViewModels.cs" />
     <Compile Remove="DAL\ADOFileResourceRepository.cs" />
     <Compile Remove="Filter\ObjectFilter.cs" />
-    <Compile Remove="Controllers\ProjectController.cs" />
-    <Compile Remove="Controllers\GroupController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />

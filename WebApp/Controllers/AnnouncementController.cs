@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using WebApp.Models;
 using WebApp.DAL;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using static WebApp.Constants;
 
 namespace WebApp.Controllers
 {
@@ -14,10 +16,17 @@ namespace WebApp.Controllers
     public class AnnouncementController : Controller
     {
         private readonly IAnnouncementRepository _announcementctx;
-        private List<string> FileList = new List<string>();      
-        public AnnouncementController(IAnnouncementRepository announcement)
+        private readonly IHostingEnvironment environment;
+        private readonly IFileResourceRepository fileResourceRepository;
+
+        private List<string> FileList = new List<string>();
+        public AnnouncementController(IAnnouncementRepository announcement,
+                                      IFileResourceRepository fileResourceRepository,
+                                      IHostingEnvironment environment)
         {
             _announcementctx = announcement;
+            this.fileResourceRepository = fileResourceRepository;
+            this.environment = environment;
         }
 
         public ActionResult DeleteFileResource(int fileResourceId)
@@ -26,12 +35,12 @@ namespace WebApp.Controllers
             int numberOfRowsAffected = 0;
             try
             {
-               //numberOfRowsAffected = fileResourceRepository.DeleteFileResource(fileResourceId);
+                //numberOfRowsAffected = fileResourceRepository.DeleteFileResource(fileResourceId);
                 return Json(new { rowsAffected = numberOfRowsAffected });
             }
             catch (Exception e)
             {
-                return Json(new { rowsAffected = numberOfRowsAffected, error = e.Message});
+                return Json(new { rowsAffected = numberOfRowsAffected, error = e.Message });
             }
         }
 
@@ -48,8 +57,8 @@ namespace WebApp.Controllers
 
         public ActionResult Get(int? page)
         {
-			int? courseId = HttpContext.Session.GetInt32("CourseId");
-			int cId = courseId ?? default(int);
+            int? courseId = HttpContext.Session.GetInt32(CID);
+            int cId = courseId ?? default(int);
             List<Announcement> a = _announcementctx.Get(page, cId);
             ViewData["Announcements"] = a;
             bool stopAppend = false;
@@ -77,23 +86,22 @@ namespace WebApp.Controllers
         public ActionResult DeleteUploadedFiles()
         {
             int? staffId = HttpContext.Session.GetInt32("LID");
-			int sId = staffId ?? default(int);
-			//string pathString = Path.Combine(Server.MapPath("~/Content/uploads"), sId.ToString());
-			string pathString = "";
+            int sId = staffId ?? default(int);
+            string pathString = Path.Combine(environment.ContentRootPath, "/Content/uploads", sId.ToString());
+
             if (Directory.Exists(pathString)) Directory.Delete(pathString, true);
 
             return null;
         }
         public ActionResult AddFileResources(int announcementId)
         {
-			int? staffId = HttpContext.Session.GetInt32("LID");
+            int? staffId = HttpContext.Session.GetInt32("LID");
             int sId = staffId ?? default(int);
-            string path = Path.Combine("~/Content/uploads/", staffId.ToString());
-			string pathString = "";
-           // string pathString = Path.Combine(Server.MapPath("~/Content/uploads"), staffId.ToString());
-            if (Directory.Exists(pathString))
+            string path = Path.Combine(environment.ContentRootPath, "/Content/uploads/", staffId.ToString());
+
+            if (Directory.Exists(path))
             {
-				DirectoryInfo uploadFolder = new DirectoryInfo(pathString);
+                DirectoryInfo uploadFolder = new DirectoryInfo(path);
                 FileInfo[] files = uploadFolder.GetFiles();
 
                 Dictionary<string, byte[]> d = new Dictionary<string, byte[]>();
@@ -104,8 +112,8 @@ namespace WebApp.Controllers
                     d.Add(fileName, fileData);
                 }
 
-                Directory.Delete(pathString, true);
-               // new UploadService().AddFile(announcementId, d);
+                Directory.Delete(path, true);
+                new UploadService().AddFile(announcementId, d);
             }
             return PartialView("Post", _announcementctx.GetAnnouncementById(announcementId));
         }
@@ -116,20 +124,20 @@ namespace WebApp.Controllers
             DateTime currentTime = DateTime.Now;
             int? staffId = HttpContext.Session.GetInt32("LID");
             string path = Path.Combine("~/Content/uploads/", staffId.ToString());
-			//string pathString = Path.Combine(Server.MapPath("~/Content/uploads"), staffId.ToString());
-			string pathString = "";
-			announcement.course_id = HttpContext.Session.GetInt32("CourseId") ?? default(int);;
+            //string pathString = Path.Combine(Server.MapPath("~/Content/uploads"), staffId.ToString());
+            string pathString = "";
+            announcement.course_id = HttpContext.Session.GetInt32(CID) ?? default(int); ;
             announcement.last_edit_date = currentTime;
             announcement.announcement_date = currentTime;
-			announcement.lecturer_id = HttpContext.Session.GetInt32("LID") ?? default(int);
+            announcement.lecturer_id = HttpContext.Session.GetInt32("LID") ?? default(int);
 
             int announcementId = _announcementctx.AddAnnouncement(announcement);
 
             if (Directory.Exists(pathString))
             {
-               // DirectoryInfo uploadFolder = new DirectoryInfo(Server.MapPath(path));
-                //FileInfo[] files = uploadFolder.GetFiles();
-               // UploadService uploadsvc = new UploadService();
+                DirectoryInfo uploadFolder = new DirectoryInfo(Path.Combine(environment.ContentRootPath, path));
+                FileInfo[] files = uploadFolder.GetFiles();
+                UploadService uploadsvc = new UploadService();
 
                 Dictionary<string, byte[]> d = new Dictionary<string, byte[]>();
                 List<FileResource> fd = null;
@@ -138,16 +146,16 @@ namespace WebApp.Controllers
                 //    string fileName = files[i].ToString();
                 //    byte[] fileData = GetBytes(Path.Combine(path, fileName));
                 //    d.Add(fileName, fileData);
-                
+
                 //}
-                
+
                 //Directory.Delete(pathString, true);
                 //uploadsvc.AddFile(announcementId, d);
                 announcement.filesDisplay = _announcementctx.GetFileResource(announcementId);
             }
             else
             {
-                announcement.filesDisplay = new List<FileResource>() ;
+                announcement.filesDisplay = new List<FileResource>();
             }
 
             //Before returning the view, update announcement with its id.
@@ -167,34 +175,34 @@ namespace WebApp.Controllers
         [HttpPost]
         public ActionResult Remove(int id)
         {
-			//IFileResourceRepository fileResourceRepository = new FileResourceRepository();
-			//fileResourceRepository.DeleteFileResourcesForAnnouncement(id);
-			//int count = _announcementctx.DeleteAnnouncement(id);
-			//bool removed = (count > 0) ? true : false;
-			//return Json(removed);
-			return null;
+            IFileResourceRepository fileResourceRepository = new FileResourceRepository();
+            fileResourceRepository.DeleteFileResourcesForAnnouncement(id);
+            int count = _announcementctx.DeleteAnnouncement(id);
+            bool removed = (count > 0) ? true : false;
+            return Json(removed);
+
         }
 
-        public byte[] GetBytes(string path)
+        private byte[] GetBytes(string path)
         {
-			//FileStream fs = null;
-			//BinaryReader br = null;
-			//try
-			//{
-			//    byte[] buffer = null;
-			//    fs = new FileStream(Server.MapPath(path), FileMode.Open, FileAccess.Read);
-			//    br = new BinaryReader(fs);
-			//    long numBytes = new FileInfo(Server.MapPath(path)).Length;
-			//    buffer = br.ReadBytes((int)numBytes);
-			//    br.Close();
-			//    fs.Close();
-			//    return buffer;
-			//}
-			//catch (Exception err)
-			//{
-			//    throw new Exception("SaveFileIntoDatabase: " + err.Message);
-			//}
-			return null;
+            FileStream fs = null;
+            BinaryReader br = null;
+            try
+            {
+                byte[] buffer = null;
+                fs = new FileStream(Path.Combine(environment.ContentRootPath, path), FileMode.Open, FileAccess.Read);
+                br = new BinaryReader(fs);
+                long numBytes = new FileInfo(Path.Combine(environment.ContentRootPath, path)).Length;
+                buffer = br.ReadBytes((int)numBytes);
+                br.Close();
+                fs.Close();
+                return buffer;
+            }
+            catch (Exception err)
+            {
+                throw new Exception("SaveFileIntoDatabase: " + err.Message);
+            }
+
         }
 
         public ActionResult FileRequest(int id)
@@ -205,11 +213,11 @@ namespace WebApp.Controllers
             {
                 // Clears the response stream.
                 Response.Clear();
-                //Response.AddHeader("Content-Disposition", "attachment;filename=FileNotFound.txt");
-                //Response.Write("Sorry, the requested file could not be found on the server.");
+                Response.Headers.Add("Content-Disposition", "attachment;filename=FileNotFound.txt");
+                Response.WriteAsync("Sorry, the requested file could not be found on the server.");
 
                 // Sends whatever that is in the buffer.
-                //Response.Flush();
+                Response.Body.FlushAsync();
                 return null;
             }
 
@@ -245,68 +253,70 @@ namespace WebApp.Controllers
             }
         }
 
-   //     public ActionResult UploadFile(int? entityId)
-   //     {
-   //         var statuses = new List<ViewDataUploadFileResult>();
-			//int userId = HttpContext.Session.GetInt32("LID")?? default(int);;
-        //    string pathString = Path.Combine(Server.MapPath("~/Content/uploads"), userId.ToString());
-        //    if (!Directory.Exists(pathString)) Directory.CreateDirectory(pathString);
-        //    for (var i = 0; i < Request.Files.Count; i++)
-        //    {
-        //        var st = FileSaver.StoreFile(x =>
-        //        {
-        //            x.File = Request.Files[i];
-        //            x.DeleteUrl = Url.Action("DeleteFile", new { entityId = entityId });
-        //            DateTime timestamp = DateTime.Now;
-        //            x.StorageDirectory = pathString;
-        //            x.UrlPrefix = "/Content/uploads/" + userId;
-        //            x.FileName = Request.Files[i].FileName;
-        //            x.ThrowExceptions = true;
-        //        });
-        //        statuses.Add(st);
-        //    }
+        public ActionResult UploadFile(int? entityId)
+        {
+            //         var statuses = new List<ViewDataUploadFileResult>();
+            //int userId = HttpContext.Session.GetInt32("LID")?? default(int);;
+            //string pathString = Path.Combine(environment.ContentRootPath,"/Content/uploads", userId.ToString());
+            //         if (!Directory.Exists(pathString)) Directory.CreateDirectory(pathString);
+            //for (var i = 0; i < Request.Form.Files.Count; i++)
+            //{
+            //    var st = FileSaver.StoreFile(x =>
+            //    {
+            //        x.File = Request.Files[i];
+            //        x.DeleteUrl = Url.Action("DeleteFile", new { entityId = entityId });
+            //        DateTime timestamp = DateTime.Now;
+            //        x.StorageDirectory = pathString;
+            //        x.UrlPrefix = "/Content/uploads/" + userId;
+            //        x.FileName = Request.Files[i].FileName;
+            //        x.ThrowExceptions = true;
+            //    });
+            //    statuses.Add(st);
+            //}
 
 
-        //    statuses.ForEach(x => x.thumbnailUrl = x.url + "?width=80&height=80");
-        //    statuses.ForEach(x => x.url = Url.Action("DownloadFile", new { fileUrl = x.url, mimetype = x.type }));
+            //statuses.ForEach(x => x.thumbnailUrl = x.url + "?width=80&height=80");
+            //statuses.ForEach(x => x.url = Url.Action("DownloadFile", new { fileUrl = x.url, mimetype = x.type }));
 
 
-        //    var viewresult = Json(new { files = statuses });
-        //    //for IE8 which does not accept application/json
-        //    if (Request.Headers["Accept"] != null && !Request.Headers["Accept"].Contains("application/json"))
-        //        viewresult.ContentType = "text/plain";
-
-        //    return viewresult;
-        //}
-
-
-        //[HttpPost]
-        //public ActionResult DeleteFile(int? entityId, string fileUrl)
-        //{
-        //    var filePath = Server.MapPath("~" + fileUrl);
-
-        //    if (System.IO.File.Exists(filePath))
-        //        System.IO.File.Delete(filePath);
-
-        //    var viewresult = Json(new { error = String.Empty });
-        //    //for IE8 which does not accept application/json
-        //    if (Request.Headers["Accept"] != null && !Request.Headers["Accept"].Contains("application/json"))
-        //        viewresult.ContentType = "text/plain";
-
-        //    return viewresult; // trigger success
-        //}
+            //var viewresult = Json(new { files = statuses });
+            //for IE8 which does not accept application/json
+            //if (Request.Headers["Accept"]!= null)
+            //{
+            //	if (!Request.Headers["Accept"].Contains("application/json"))
+            //		viewresult.ContentType = "text/plain";
+            //}
+            return null;
+        }
 
 
-        //public ActionResult DownloadFile(string fileUrl, string mimetype)
-        //{
-        //    var filePath = Server.MapPath("~" + fileUrl);
+        [HttpPost]
+        public ActionResult DeleteFile(int? entityId, string fileUrl)
+        {
+            var filePath = Path.Combine(environment.ContentRootPath, fileUrl);
 
-        //    if (System.IO.File.Exists(filePath))
-        //        return File(filePath, mimetype);
-        //    else
-        //    {
-        //        return new HttpNotFoundResult("File not found");
-        //    }
-        //}
+            if (System.IO.File.Exists(filePath))
+                System.IO.File.Delete(filePath);
+
+            var viewresult = Json(new { error = String.Empty });
+            //for IE8 which does not accept application/json
+            //if (Request.Headers["Accept"] != null && !Request.Headers["Accept"].Contains("application/json"))
+            //viewresult.ContentType = "text/plain";
+
+            return viewresult; // trigger success
+        }
+
+
+        public ActionResult DownloadFile(string fileUrl, string mimetype)
+        {
+            var filePath = Path.Combine(environment.ContentRootPath, fileUrl);
+
+            if (System.IO.File.Exists(filePath))
+                return File(filePath, mimetype);
+            else
+            {
+                return new NotFoundResult();
+            }
+        }
     }
 }

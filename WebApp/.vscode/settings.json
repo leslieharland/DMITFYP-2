@@ -1,0 +1,15 @@
+{
+    "beautify.onSave": true,
+
+    "editor.formatOnSave": true,
+ 
+    // You can auto formate any files based on extensions type. 
+ "beautify.JSfiles": [
+     "js",
+     "cshtml",
+     "json",
+     "jsbeautifyrc",
+     "jshintrc",
+     "ts"
+   ] 
+}

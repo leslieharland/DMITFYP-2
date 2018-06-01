@@ -1,12 +1,13 @@
-﻿@using ChameleonForms.Component.Config
-@using WebApp.Infrastructure.AspNet
+﻿@using WebApp.Infrastructure.AspNet
 @using WebApp.ViewModels.InitiatedProject
+
 @model WebApp.ViewModels.InitiatedProject.InitiatedProjectViewModel
 
 @section Content{
-    <link href="~/dist/form-intf.min.css" rel="stylesheet" />
+
     <style>
-        textarea:focus::-webkit-input-placeholder {
+
+        textarea:focus::- webkit - input - placeholder {
             opacity: 0;
         }
 
@@ -25,28 +26,26 @@
     </style>
 }
 @section Scripts{
-<script src="~/dist/form-intf.min.js"></script>
-<script src="~/Scripts/require/project-create.js"></script>
-<script>
-    $(function () {
-        var field = 'resubmit';
-        var url = window.location.href;
-        if (url.indexOf('?' + field + '=') != -1) {
-            $('input#resubmit').val('resubmit');
-        }
-    });
-</script>
+    <script src="~/dist/form-intf.min.js"></script>
+    <script src="~/Scripts/require/project-create.js"></script>
+    <script>$(function() {
+            var field = 'resubmit';
+            var url = window.location.href;
+            if (url.indexOf('?' + field + '=') != -1) {
+                $('input#resubmit').val('resubmit');
+            }
+});</script>
 }
 
 @if (ViewBag.NotInGroup == null)
 {
     <div class="boxed push-down-45" style="padding: 30px 16px;" id="self-init-div">
-        @using (var f = Html.BeginChameleonForm("/project/selfInitiated", FormMethod.Post, new { @id = "frmselfinitiated", @onsubmit = "saveappendcontent()" }.ToHtmlAttributes()))
+        @using (var f = Html.BeginForm("/project/selfInitiated", FormMethod.Post, new { @id = "frmselfinitiated", @onsubmit = "saveappendcontent()" }.ToHtmlAttributes()))
         {
             using (var s = f.BeginSection("Student-Initiated Project Proposal", null, new { @class = "student-initiated" }.ToHtmlAttributes()))
             {
-                <p>* The following fields are mandatory</p>
-                @Html.ValidationMessage("", new { @class = "error-vsummary"})
+                < p > *The following fields are mandatory</ p >
+                @Html.ValidationMessage("", new { @class = "error-vsummary" })
                 @s.FieldFor(m => Model.Title).Cols(60).Rows(1).AutoFocus().TabIndex(1)
                 @s.FieldFor(m => Model.ProjectOverview).Cols(100).Rows(5).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.ProjectOverview.GetDisplayName())
                 @s.FieldFor(m => Model.IntroBackground).Cols(100).Rows(5).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.IntroBackground.GetDisplayName())
@@ -61,13 +60,14 @@
                 @Html.HiddenFor(m => Model.displayFields)
                 @Html.Hidden("resubmit")
 
-                <div id="custom-content"></div>
-                <button id="add-field" value="1">Add Custom Field</button>
+                < div id = "custom-content" ></ div >
+
+                < button id = "add-field" value = "1" > Add Custom Field</ button >
                 using (var n = f.BeginNavigation())
                 {
-                    <button type="submit" name="Save">Save</button>
+                    < button type = "submit" name = "Save" > Save </ button >
                     @n.Submit("Submit", "Submit")
-                }           
+                }
             }
         }
     </div>

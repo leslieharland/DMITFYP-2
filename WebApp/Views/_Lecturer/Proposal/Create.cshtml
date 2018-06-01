@@ -1,48 +1,119 @@
-﻿
-@using ChameleonForms.Component.Config
-@using WebApp.Infrastructure.AspNet
-@using WebApp.ViewModels.Proposal
-@model WebApp.ViewModels.Proposal.ProposalViewModel
+﻿ @using WebApp.Infrastructure.AspNet 
+ @using WebApp.ViewModels.Proposal 
+ @model WebApp.ViewModels.Proposal.ProposalViewModel
 <style>
-    textarea:focus::-webkit-input-placeholder {
-        opacity: 0;
-    }
+textarea:focus::-webkit-input-placeholder {
+    opacity: 0;
+}
+@Html.ValidationSummary(true)
 </style>
 <div class="p-container boxed">
     <div class="col-sm-inset-1 col-xs-12">
         <h4>Add proposal</h4>
-        <br /><br />
-        <div class="fbox-container fb1">
-            @using (var f = Html.BeginChameleonForm("/proposal/create"))
-            {
-                using (var s = f.BeginSection("Company Details", null))
-                {
-                    <p>@s.FieldFor(m => m.CompanyName)</p>
-                    <p>@s.FieldFor(m => m.Address)</p>
-                    <p>@s.FieldFor(m => m.Tel)</p>
-                    <p>@s.FieldFor(m => m.Fax)</p>
-                    <p>@s.FieldFor(m => m.Email)</p>
-                    <p>@s.FieldFor(m => m.LiaisonOfficer)</p>
-                    <p>@s.FieldFor(m => m.WillingToSponsor).InlineLabel("")</p>
-                }
+        <br />
+        <br />
+        <div class="fbox-container fb1"></div>
+            <form asp-controller="Proposal" asp-action="Create" method="POST"  class="form-horizontal" role="form">
+                <h4>Company Details</h4>
+                <hr />
+                <div class="form-group">
+                    <label asp-for="CompanyName" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="CompanyName" class="form-control" />
+                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                    </div>
+                </div>
 
-                using (var s = f.BeginSection("Project Outline", null, new { @class = "class" }.ToHtmlAttributes()))
-                {
-                    @s.FieldFor(m => m.Title).Cols(60).Rows(1).Label("Title").AutoFocus().TabIndex(1)
-                    @s.FieldFor(m => m.Aims).Cols(100).Rows(5).Label("Aims").Placeholder(DescriptionHelper.Aims.GetDisplayName())
-                    @s.FieldFor(m => m.Schedule).Cols(100).Rows(5).Label("Schedule").Placeholder(DescriptionHelper.Schedule.GetDisplayName())
-                    @s.FieldFor(m => m.Objectives).Cols(100).Rows(5).Label("Objectives").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.Objectives.GetDisplayName())
-                    @s.FieldFor(m => m.TargetAudience).Cols(100).Rows(3).Label("Target Audience").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.TargetAudience.GetDisplayName())
-                    @s.FieldFor(m => m.MainFunction).Cols(100).Rows(5).Label("Main function/ Deliverables").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.MainFunctionsAndDeliverables.GetDisplayName())
-                    @s.FieldFor(m => m.HardwareAndSoftwareConfiguration).Cols(100).Rows(5).Label("Hardware and software requirements").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.HardwareAndSoftwareRequirements.GetDisplayName())
-                    @s.FieldFor(m => m.ReadyForApproval)
-                }
-                using (var n = f.BeginNavigation())
-                {
-                    <button type="submit" name="Save">Save</button>
-                    @n.Submit("Submit", "Submit")
-                }
-            }
-            </div>
+                <div class="form-group">
+                    <label asp-for="Address" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Address" class="form-control" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Tel" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Tel" class="form-control" />
+                        <span asp-validation-for="Tel" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Fax" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Fax" class="form-control" />
+                        <span asp-validation-for="Fax" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LiaisonOfficer" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="LiaisonOfficer" class="form-control" />
+                        <span asp-validation-for="LiaisonOfficer" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <label>@Html.DisplayNameFor(m => m.WillingToSponsor)</label>
+                <!-- type form-control changes this to a text field -->
+                <input asp-for="WillingToSponsor" type="checkbox" value=""/>
+                <div style="margin-top:10%"></div>
+                
+                <h4>Project Outline</h4>
+                <hr />
+                
+                <div class="form-group">
+                    <label asp-for="Title" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Aims" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Aims" class="form-control" />
+                        <span asp-validation-for="Aims" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Schedule" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="Schedule" class="form-control" />
+                        <span asp-validation-for="Schedule" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="TargetAudience" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="TargetAudience" class="form-control" />
+                        <span asp-validation-for="TargetAudience" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="HardwareAndSoftwareConfiguration" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <input asp-for="HardwareAndSoftwareConfiguration" class="form-control" />
+                        <span asp-validation-for="HardwareAndSoftwareConfiguration" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <button type="submit" name="Save">Save</button>
+            </form>
         </div>
     </div>
+</div>

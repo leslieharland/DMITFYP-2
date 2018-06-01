@@ -26,6 +26,5 @@ namespace WebApp.DAL
         int GetStudentId(string admin);
 		Student GetStudent(string admin);
         Student GetStudentByStudentId(int studentId);
-        string GenerateRandomUrlEmbeddedAccountActivationToken();
     }
 }

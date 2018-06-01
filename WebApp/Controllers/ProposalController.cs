@@ -14,35 +14,36 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Xceed.Words.NET;
 using System.Diagnostics;
+using static WebApp.Constants;
 
 namespace WebApp.Controllers
 {
     [Authorize(Roles = "Manager, Admin")]
     public class ProposalController : Controller
-	{
-		private readonly IHostingEnvironment environment;
+    {
+        private readonly IHostingEnvironment environment;
         private readonly IProposalRepository _proposalctx;
         private readonly ILecturerRepository _lecturerctx;
         private readonly IProjectRepository _projectx;
 
 
         public ProposalController(IProposalRepository proposal,
-		                          ILecturerRepository lecturer, 
-		                          IProjectRepository project,
-		                          IHostingEnvironment environment)
+                                  ILecturerRepository lecturer,
+                                  IProjectRepository project,
+                                  IHostingEnvironment environment)
         {
             _proposalctx = proposal;
             _lecturerctx = lecturer;
             _projectx = project;
-			this.environment = environment;
+            this.environment = environment;
         }
 
         public ActionResult Index()
         {
             HttpContext.Session.SetBoolean("IndexStudent", false);
             HttpContext.Session.SetBoolean("IndexUser", false);
-			Lecturer lecturer = _lecturerctx.GetLecturer(User.Identity.Name.ToString().Substring(1, User.Identity.Name.ToString().Length - 1));
-            int courseId = HttpContext.Session.GetInt32("CourseId") ?? default(int);
+            Lecturer lecturer = _lecturerctx.GetLecturer(User.Identity.Name.ToString().Substring(1, User.Identity.Name.ToString().Length - 1));
+            int courseId = HttpContext.Session.GetInt32(CID) ?? default(int);
 
             if (User.IsInRole("Admin"))
             {
@@ -52,9 +53,9 @@ namespace WebApp.Controllers
             }
             else
             {
-				Debug.WriteLine(lecturer.lecturer_id);
+                Debug.WriteLine(lecturer.lecturer_id);
                 IEnumerable<ProposalViewModel> proposals = _proposalctx.GetForLecturer(lecturer);
-			
+
                 return View("~/Views/_Lecturer/Proposal/Index.cshtml", proposals);
             }
         }
@@ -62,17 +63,23 @@ namespace WebApp.Controllers
         [Route("proposal/student")]
         public ActionResult IndexStudent()
         {
-            int courseId = HttpContext.Session.GetInt32("CourseId") ?? default(int);
+            int courseId = HttpContext.Session.GetInt32(CID) ?? default(int);
             IEnumerable<dynamic> proposals = _projectx.GetSelfInitiatedProjects(courseId);
+            if (proposals == null){
+                List<ProposalViewModel> list = new List<ProposalViewModel>();
+                proposals = list;
+            }
             HttpContext.Session.SetBoolean("IndexStudent", true);
             ViewBag.Type = "Student";
+            Debug.WriteLine(proposals == null);
+
             return View("~/Views/_Lecturer/Proposal/Index.cshtml", proposals);
         }
         [Route("proposal/user")]
         public ActionResult IndexUser()
         {
-            Lecturer lecturer = _lecturerctx.GetLecturer(User.Identity.Name.ToString());
-            int courseId = HttpContext.Session.GetInt32("CourseId") ?? default(int);
+            Lecturer lecturer = _lecturerctx.GetLecturer(User.Identity.Name.ToString().Substring(1, User.Identity.Name.Length -1));
+            int courseId = HttpContext.Session.GetInt32(CID) ?? default(int);
             IEnumerable<ProposalViewModel> proposals = _proposalctx.GetForLecturer(lecturer);
             HttpContext.Session.SetBoolean("IndexUser", true);
             return View("~/Views/_Admin/Proposal/Index.cshtml", proposals);
@@ -91,13 +98,13 @@ namespace WebApp.Controllers
 
             if (User.IsInRole("Admin"))
             {
-				if (HttpContext.Session.GetBoolean("IndexExternal") ?? default(bool))
+                if (HttpContext.Session.GetBoolean("IndexExternal") ?? default(bool))
                 {
                     ViewBag.Type = "External";
                     HttpContext.Session.SetBoolean("IndexExternal", false);
                 }
 
-				if (HttpContext.Session.GetBoolean("IndexStudent") ?? default(bool))
+                if (HttpContext.Session.GetBoolean("IndexStudent") ?? default(bool))
                 {
                     ViewBag.Type = "Student";
                     HttpContext.Session.SetBoolean("IndexStudent", false);
@@ -123,52 +130,16 @@ namespace WebApp.Controllers
         [HttpPost]
         public ActionResult Create(ProposalViewModel proposal)
         {
-            Lecturer lecturer = _lecturerctx.GetLecturer(User.Identity.Name.ToString());
-            if (proposal.Submit != "Submit")
+            Lecturer lecturer = _lecturerctx.GetLecturer(User.Identity.Name.ToString().Substring(1, User.Identity.Name.Length -1));
+            if (ModelState.IsValid)
             {
-                ModelState.Remove("Title");
-                ModelState.Remove("Aims");
-                ModelState.Remove("Schedule");
-                ModelState.Remove("Objectives");
-                ModelState.Remove("TargetAudience");
-                ModelState.Remove("MainFunction");
-                ModelState.Remove("HardwareAndSoftwareConfiguration");
-                ModelState.Remove("TargetAudience");
-                if (string.IsNullOrEmpty(proposal.Title))
-                {
-                    ModelState.AddModelError("Title", "The title is required to save");
-                }
-
-                if (ModelState.IsValid)
-                {
-                    int error = _proposalctx.AddProposal(proposal, lecturer.lecturer_id, lecturer.course_id);
-                    if (error == 1)
-                    {
-                        ModelState.AddModelError("Title", "Title being used by another proposal");
-                        return View(proposal);
-                    }
-                    return RedirectToAction("Index");
-                }
+                proposal.SubmittedDate = DateTime.Now;
+                _proposalctx.AddProposal(proposal, lecturer.lecturer_id, lecturer.course_id);
+				_proposalctx.ApproveProposal(proposal.Id);
+                return RedirectToAction("Index");
             }
-            else
-            {
-                if (ModelState.IsValid)
-                {
-                    proposal.SubmittedDate = DateTime.Now;
-                    int error = _proposalctx.AddProposal(proposal, lecturer.lecturer_id, lecturer.course_id);
-                    if (error == 1)
-                    {
-                        ModelState.AddModelError("Title", "Title being used by another proposal");
-                        return View(proposal);
-                    }
-                    else
-                    {
-                        _proposalctx.ApproveProposal(proposal.Id);
-                    }
-                    return RedirectToAction("Index");
-                }
-            }
-            return View(proposal);
+	
+            return View("~/Views/_Lecturer/Proposal/Create.cshtml", proposal);
         }
 
 
@@ -183,24 +154,16 @@ namespace WebApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (proposal.Submit == "Submit")
+
+                if (User.IsInRole("Admin"))
                 {
-                    if (User.IsInRole("Admin"))
-                    {
-                        _proposalctx.ApproveProposal(proposal.Id);
-                    }
-
-                    if (User.IsInRole("Manager"))
-                    {
-                        proposal.SubmittedDate = DateTime.Now;
-                        _proposalctx.UpdateProposal(proposal);
-                    }
-
+                    _proposalctx.ApproveProposal(proposal.Id);
                 }
-                else
+
+                if (User.IsInRole("Manager"))
                 {
+                    proposal.SubmittedDate = DateTime.Now;
                     _proposalctx.UpdateProposal(proposal);
-                    //ViewBag.Success = true;
                 }
                 return RedirectToAction("Details", new { proposal.Id });
             }
@@ -219,7 +182,7 @@ namespace WebApp.Controllers
         {
             dynamic proposal = _proposalctx.GetProposalById(Id);
             string templateName = "External_Project_Proposal.docx";
-			string path = Path.Combine(environment.ContentRootPath, "/App_Data/Generated", templateName);
+            string path = Path.Combine(environment.ContentRootPath, "/App_Data/Generated", templateName);
             string downloadPath = string.Format(@"{0}{1}.docx", path, "-" + proposal.Title);
             if (proposal.ProjectType == "External")
             {

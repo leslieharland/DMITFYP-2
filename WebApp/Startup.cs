@@ -87,7 +87,7 @@ namespace WebApp
 					template: "{controller=Home}/{action=Index}/{id?}");
 			});
 
-			CreateRoles(serviceProvider).Wait();
+			//CreateRoles(serviceProvider).Wait();
 		}
 
 		private async Task CreateRoles(IServiceProvider serviceProvider)
@@ -143,7 +143,9 @@ namespace WebApp
 					semester = 1,
 					course_id = 1,
 					student_id = 1,
-					year = 2018
+					year = 2018,
+					group_id = null,
+					group_role = null
 				}
 			};
 
