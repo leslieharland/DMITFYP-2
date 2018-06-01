@@ -1,0 +1,43 @@
+﻿@model WebApp.ViewModels.InitiatedProject.InitiatedProjectViewModel
+@using WebApp.Infrastructure.AspNet
+<style>
+    ::selection {
+        background: transparent !important;
+    }
+
+    ::-moz-selection {
+        background: transparent;
+    }
+</style>
+@if (Model != null)
+{
+    if (!Model.Availability)
+    {
+
+        if (Model.SubmittedDate != null)
+        {
+        <p>Your submission</p>
+        <p>Your proposal submitted on <span>@Model.SubmittedDate</span>&nbsp;<a href="/project/download/@Model.Id"><i class="fa fa-download"></i></a></p>
+        <form action="/project/selfinitiated?resubmit=true" method="post">
+            <button type="submit">Submit new response</button>
+        </form>
+
+
+        }
+        if (Model.SavedDate != null)
+        {
+        <p>You have an active proposal last edited on @Model.SavedDate</p>
+        <span>Continue editing?</span>
+        <button onclick="location.href = '/project/edit/@Model.Id'">Yes</button>
+        <button onclick="location.href = '/project/delete/@Model.Id'">Discard working draft</button>
+        }
+    }
+    else
+    {
+        <p>Your proposal has been approved</p>
+    }
+}
+else
+{
+    @Html.Partial("_Create")
+}

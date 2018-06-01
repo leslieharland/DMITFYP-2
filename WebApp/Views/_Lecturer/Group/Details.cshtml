@@ -1,0 +1,42 @@
+﻿@model ICollection<WebApp.ViewModels.GroupViewModel>
+
+        <div id="tableresults">
+            @if (Model != null)
+            {
+                foreach (var item in Model)
+                {
+                    <h5>Project: @item.ProjectId - @item.ProjectTitle</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover" data-pagination="true">
+                            <thead>
+                                <tr>
+                                    <th>Group</th>
+                                    <th>Name</th>
+                                    <th>Admin Number</th>
+                                    <th>Mobile</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var member in item.Members)
+                                {
+                                    <tr>
+                                        <td>@member.GroupId</td>
+                                        <td>@member.StudentName</td>
+                                        <td>@member.AdminNumber</td>
+                                        <td>@member.Mobile</td>
+                                        <td>@member.Email</td>
+                                        <td>@member.Role</td>
+                                        <td>
+                                            <a class="m-edit" onclick="location.href ='@Url.Action("EditGroupMember", "Group", new { studentId = @member.StudentId })'"><span class=" glyphicon glyphicon-edit" data-id="@member.StudentId"></span></a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        </div>

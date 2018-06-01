@@ -1,0 +1,49 @@
+﻿@using ChameleonForms.Component.Config
+@using WebApp.Infrastructure.AspNet
+@using WebApp.ViewModels.Proposal
+@model WebApp.ViewModels.Proposal.ProposalViewModel
+<style>
+    .radioinput > dd > ul {
+        list-style: none;
+        display: inline;
+    }
+</style>
+<div class="p-container boxed">
+    <div class="col-sm-inset-1 col-xs-12">
+        @using (var f = Html.BeginChameleonForm())
+        {
+            using (var s = f.BeginSection("Company Details", null))
+            {
+                @Model.ModifyConfig(s.FieldFor(m => m.CompanyName))
+                @Model.ModifyConfig(s.FieldFor(m => m.Address))
+                @Model.ModifyConfig(s.FieldFor(m => m.Tel))
+                @Model.ModifyConfig(s.FieldFor(m => m.Fax))
+                @Model.ModifyConfig(s.FieldFor(m => m.Email))
+                @Model.ModifyConfig(s.FieldFor(m => m.LiaisonOfficer))
+                <div class="radioinput">
+                    @Model.ModifyConfig(s.FieldFor(m => m.WillingToSponsor)).AsRadioList()
+                </div>
+            }
+
+            using (var s = f.BeginSection("Project Outline", null, new { @class = "class" }.ToHtmlAttributes()))
+            {
+                @Model.ModifyConfig(s.FieldFor(m => m.Title))
+                @Model.ModifyConfig(s.FieldFor(m => m.Aims))
+                @Model.ModifyConfig(s.FieldFor(m => m.Objectives))
+                @Model.ModifyConfig(s.FieldFor(m => m.Schedule))
+                @Model.ModifyConfig(s.FieldFor(m => m.TargetAudience))
+                @Model.ModifyConfig(s.FieldFor(m => m.MainFunction))
+                @Model.ModifyConfig(s.FieldFor(m => m.HardwareAndSoftwareConfiguration))
+                @Model.ModifyConfig(s.FieldFor(m => m.Deadline)).Disabled()
+                @Html.HiddenFor(m => m.Deadline)
+            }
+
+            using (var n = f.BeginNavigation())
+            {
+                <button type="button" onclick="location.href = '/proposal/details/@Model.Id'">Cancel</button>
+                <button name="SaveCommand" value="1">Save</button>
+                @n.Submit("Submit", "Submit")
+            }
+        }
+    </div>
+</div>

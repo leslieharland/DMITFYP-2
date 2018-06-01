@@ -1,0 +1,33 @@
+﻿@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <!-- Sidebar -->
+<div class="sidebar">
+    <ul id="sidebar-list">
+        <li>PROPOSALS</li>
+        @if (User.IsInRole("Member"))
+        {
+            <li><a href="@Url.Action("SelfInitiated", "Project")">Submit project proposal</a></li>
+        }
+
+            @if (User.IsInRole("Admin"))
+            {
+                <li><a href="@Url.Action("Index", "Proposal")"><i class="fa fa-external-link-square"></i>&nbsp;External projects</a></li>
+                <li><a href="@Url.Action("IndexStudent", "Proposal")"><i class="fa fa-columns"></i>&nbsp;Student Initiated</a></li>
+                <li><a href="@Url.Action("IndexUser", "Proposal")"><i class="fa fa-table"></i>&nbsp;My proposals</a></li>
+            }
+            else
+            {
+                <li><a href="@Url.Action("Index", "Proposal")"><i class="fa fa-table"></i>&nbsp;My proposals</a></li>
+            }
+
+       <li><a href="@Url.Action("Create", "Proposal")"><i class="fa fa-plus"></i>&nbsp;Create proposal</a></li>
+
+
+    </ul>
+</div>
+<!-- /#sidebar-wrapper -->
+}

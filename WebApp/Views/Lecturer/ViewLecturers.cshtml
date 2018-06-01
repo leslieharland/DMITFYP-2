@@ -1,0 +1,97 @@
+﻿@Html.Partial("_AlertPane")
+@Html.Partial("Lecturer.Modal")
+<style>
+    div.dataTables_filter input {
+        max-width: 100% !important;
+    }
+</style>
+<link href="//cdn.datatables.net/tabletools/2.2.4/css/dataTables.tableTools.css" rel="stylesheet" />
+<link href="//editor.datatables.net/examples/resources/bootstrap/editor.bootstrap.css" rel="stylesheet" />
+<link href="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet" />
+
+<script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.6/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdn.datatables.net/tabletools/2.2.4/js/dataTables.tableTools.min.js"></script>
+<script src="~/Scripts/dataTables.editor.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdn.datatables.net/plug-ins/1.10.6/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+<script src="~/Scripts/editor.bootstrap.js"></script>
+<script type="text/javascript" language="javascript" class="init">
+    var editor;
+
+    $("document").ready(function () {
+        $("button[data-hide='alert']").on("click", function () {
+            // Hide the alert pane, by simply/ merely adding back the class; hidden.
+            $("#globalAlertPane").addClass("hidden");
+        });
+        editor = new $.fn.dataTable.Editor({
+            ajax: "/api/ViewLecturers",
+            table: "#lecturerTable",
+            fields: [
+                {
+                    label: "Full Name",
+                    name: "full_name",
+                },
+                {
+                    label: "Staff ID",
+                    name: "staff_id"
+                },
+                {
+                    label: "Admin (FYP MC)",
+                    name: "admin"
+                },
+                {
+                    label: "Mobile",
+                    name: "contact_number"
+                },
+                {
+                    label: "Email Address",
+                    name: "email_address"
+                }
+            ]
+        });
+
+        var table = $("#lecturerTable").DataTable({
+            lengthChange: false,
+            ajax: "/api/ViewLecturers",
+            columns: [
+                { data: "full_name" },
+                { data: "staff_id" },
+                { data: "admin" },
+                { data: "contact_number", sortable: false },
+                { data: "email_address", sortable: false },
+                {
+                    data: null,
+                    defaultContent: '<a href="" class="editor_remove">Delete</a>',
+                    sortable: false
+                }
+            ]
+        });
+
+        $("#lecturerTable").on("click", "a.editor_remove", function (e) {
+            e.preventDefault();
+            var id = $(this).closest("tr").attr("id").replace("row_", "");
+            $("#lecturerIdHiddenField").val(id);
+            $("#confirmDeleteLecturerModal").modal();
+        });
+    });
+</script>
+<script src="~/Scripts/require/lecturer.js"></script>
+<div class="boxed" style="width:1000px">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10" style="padding-top:10px">
+        <button type="button" class="btn btn-success" style="position:absolute" onclick='window.location.href="@Url.Action("AddLecturer", "Lecturer")"'>
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add Lecturer
+        </button>
+        <table id="lecturerTable" class="table table-striped table-bordered" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Staff ID</th>
+                    <th>Admin (FYP MC)</th>
+                    <th>Contact Number</th>
+                    <th>Email Address</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>

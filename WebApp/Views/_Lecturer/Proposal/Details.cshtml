@@ -1,0 +1,54 @@
+﻿@model dynamic
+@using WebApp.Infrastructure.AspNet
+@{
+    Type ty = Model.GetType();
+}
+<div class="boxed push-down-45">
+    <div class="col-sm-offset-1 col-sm-10 col-xs-12">
+
+        @if (Model.SubmittedDate != null)
+        {
+            <p>This proposal was submitted on: </p>@Model.SubmittedDate
+        }
+        @foreach (var property in WebApp.Filter.TypeExtensions.GetFilteredProperties(ty))
+        {
+            <div class="row">
+                <div class="col-md-5">
+                    @if (!string.IsNullOrEmpty(@ViewData.ModelMetadata.Properties.SingleOrDefault(x => x.PropertyName == @property.Name).DisplayName))
+                        {
+                        <div class="col-property">
+                            <strong>@ViewData.ModelMetadata.Properties.SingleOrDefault(x => x.PropertyName == @property.Name).DisplayName</strong>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-property">
+                            <strong>@property.Name</strong>
+                        </div>
+                    }
+                </div>
+                <div class="col-md-5">
+                    <div class="col-property">
+                        @Model.GetType().GetProperty(property.Name).GetValue(Model, null)
+                    </div>
+                </div>
+            </div>
+        } 
+
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-md-5" style="margin-top: 20px;">
+                <div>
+                    <a href="/proposal">Back to list</a>
+                </div>
+            </div>
+            @if (Model.SubmittedDate == null)
+            {
+                <div class="col-md-5" style="margin-left: -2px;">
+
+                        <button class="btn-no-border btn-default" onclick="location.href = '@Url.Action("Edit", "Proposal", new { Id = Model.Id })';"><i class="glyphicon glyphicon-pencil" style="margin-right: 4px;"></i><strong>Edit</strong></button>    
+                    <div>&nbsp;&nbsp;&nbsp;</div>                  
+                </div>
+            }
+        </div>
+    </div>
+</div>

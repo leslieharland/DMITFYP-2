@@ -1,0 +1,17 @@
+﻿@model WebApp.ViewModels.Contact.ComposeViewModel
+@using WebApp.Models
+<tr>
+    <td>
+        <span class="full-name">All students</span>
+        <input type="hidden" value="-1000" />
+    </td>
+</tr>
+@foreach (StudentContact s in Model.StudentContacts as IEnumerable<StudentContact>)
+{
+    <tr>
+        <td>
+            <span class="full-name">@s.FullName</span>
+            <input type="hidden" class="id" value="@s.Id" />
+        </td>
+    </tr>
+}

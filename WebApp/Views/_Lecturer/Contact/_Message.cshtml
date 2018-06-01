@@ -1,0 +1,39 @@
+﻿@model WebApp.ViewModels.Contact.ComposeViewModel
+<div id="content-body">
+    <form action="@Url.Action("Send", "Contact")" method="post" id="form-compose-message">
+        <div id="custom-menubar">
+            <button type="button" value="Send" title="Send email" class="menu-btns" onclick="alterForText(); confirmationBeforeSubmit();">Send</button>
+            <button type="button" value="Save for later" title="Save for later" class="menu-btns">Save for later</button>
+            <button type="button" value="Cancel" title="Cancel" class="menu-btns" onclick="resetComposeForm()">Cancel</button>
+            <div class="send-method-ctrl" style="width: 30%; display: inline-block;">
+                <label for="send-method-option">Send via...</label>
+                <select id="send-method-option" name="typetosend">
+                    <option value="1">
+                        Email
+                    </option>
+                    <option value="2">
+                        SMS
+                    </option>
+                </select>
+            </div>
+        </div>
+        <div id="type-recipient" class="frm-title-info">
+            <div><span class="input-state-error" id="recipient-error-message"></span></div>
+            <label for="tag-list">Recipients: </label>
+            <input type="text" id="tag-list" name="recipients"/>
+            <input type="hidden" id="hidden-tag-email" name="emails" />
+        </div>
+        <div id="type-subject" class="frm-title-info">
+            <div><span class="input-state-error" id="subject-error-message"></span></div>
+            <label for="subject-heading">Subject: </label>
+            <input type="text" id="subject-heading" name="subject" autocomplete="off" />
+        </div>
+        <div id="message" style="margin: 5px auto; height: 347px;" class="frm-title-info">
+            <div><span class="input-state-error" id="editor-error-message"></span></div>
+            <textarea id="rte" name="content" style="width:100%"></textarea>
+            <div id="character_count">
+            </div>
+        </div>
+        <input type="hidden" name="messageText" id="messageText"/>
+    </form>
+</div>

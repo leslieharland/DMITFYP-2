@@ -1,0 +1,346 @@
+﻿@model WebApp.ViewModels.StudentAddStudentViewModel
+
+@{
+    ViewBag.Title = "AddStudent";
+}
+<script src="~/js/dropzone.js"></script>
+@*<link href="~/Content/basic.css" rel="stylesheet" />
+<link href="~/Content/dropzone.css" rel="stylesheet" />*@
+<script>
+    Dropzone.autoDiscover = false;
+
+    function allFieldsValid(fieldsValidityArray) {
+        var valid = true;
+        for (var a = 0; a < fieldsValidityArray.length; ++a) {
+            if (fieldsValidityArray[a] == false) {
+                valid = false;
+            }
+        }
+        return valid;
+    }
+
+    function clearAllFormFields() {
+        $.each($(".form-group"), function (index, value) {
+            $($(value).children()[1]).val("");
+        });
+    }
+
+    function unbindAllEventsOfAllFormFields() {
+        $.each($(".form-group"), function (index, value) {
+            $($(value).children()[1]).unbind();
+        });
+    }
+
+    $("document").ready(function () {
+        // initializing Dropzone's API components
+    myDropzoneVar = new Dropzone("#dropzoneDiv", {
+            url: "/Student/BulkAddStudents",
+            paramName: "uploadedSpreadsheet",
+            maxFileSize: 1,
+            maxFiles: 1,
+            acceptedFiles: ".xlsx",
+            init: function () {
+
+
+                this.on("success", function (file, response) {
+                    var alertClass = getCurrentAlertClass();
+                    configureAlertPaneMessageSuccess(response, alertClass, "student", "added");
+
+                    $("#globalAlertPane").removeClass("hidden");
+
+                    if (response.invalidRows != undefined && response.invalidityReasons != undefined) {
+                        var url;
+                        url = "/Student/DownloadInvalidRowsFile?";
+                        for (var a = 0; a < response.invalidRows.length; ++a) {
+                            url += "invalidRowNumbers=" + response.invalidRows[a] + "&";
+                        }
+
+                        for (var b = 0; b < response.invalidityReasons.length; ++b) {
+                            url += "reasonsForInvalidity=" + response.invalidityReasons[b] + "&";
+                        }
+
+                        url = url.substring(0, url.length - 1);
+                        window.location.href = url;
+                    }
+
+                     this.destroy();
+                });
+
+
+                this.on("error", function (file, errorMessage, xhr) {
+                    var alertClass = getCurrentAlertClass();
+                    configureAlertPaneMessageError(xhr, alertClass);
+
+                    $("#globalAlertPane").removeClass("hidden");
+                });
+
+                this.on("dragenter", function () {
+                    $("#dropzoneDiv").css("borderStyle", "solid");
+                });
+
+
+                this.on("dragleave", function () {
+                    $("#dropzoneDiv").css("borderStyle", "dotted");
+                });
+
+
+                this.on("dragover", function () {
+                    $("#dropzoneDiv").css("borderStyle", "solid");
+                });
+            }
+        });
+
+        $("#manuallyAddStudentButton").click(function () {
+            // variable declaration and initializations
+
+            // Stack Overflow had been helpful in providing a regex pattern in validating for valid email addresses, with the regex being; ^([\w-]+(?:\.[\w-]+)*)@@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$
+            var regexPatterns = ["^[0-9]{7}$", "^([A-Z]{1}[a-z]+){1}( [A-Z]{1}[a-z]+)*$", "^[8-9]{1}[0-9]{7}$", "^[A-Za-z0-9\.]+@@([A-Za-z]+)(\.[A-Za-z]+)*$"];
+            var temporaryStoreFormField;
+            var alertClass;
+            var fieldsValidity = [false, false, false, false];
+
+            /*
+             * Adding in the aria-describedby attribute to text field elements with the ASP.NET MVC Razor C# language is impossible.
+             * Typically, using Razor C#, the declaration of a text field would be as such; @@TextBoxFor(x => x.fullName, new {@@class="form-control}).
+             * (When seeing a pair of "at" symbols, please ignore one of which (in the pair), as that "at" symbol's role is merely to escape the other
+             * "at" symbol in the pair) As can be seen, attributes of the HTML text field such as the class attribute, are added as properties of a C# object. Thus,
+             * should the aria-described attribute be added as a HTML text field attribute, it would have to be likewise added as a property of a C# object. The code above would
+             * thus look as such; @@TextBoxFor(x => x.fullName, new {@@class="form-control", aria-describedby="fullNameErrorMessage"}). At a glance the following code
+             * might look syntactically correct. However, it is not. This is because the aria-describedby, having a dash does not qualify as a valid C# object property
+             * name.
+             */
+
+            /* Since adding the aria-describedby attribute to the text field elements is not possible through Razor C# syntax, as elaborated previously,
+             * the Javascript code below accomplishes that job instead.
+             */
+            $("#adminNumber").attr("aria-describedby", "adminNumberErrorMessage");
+            $("#fullName").attr("aria-describedby", "fullNameErrorMessage");
+            $("#mobileNumber").attr("aria-describedby", "mobileNumberErrorMessage");
+            $("#emailAddress").attr("aria-descsribedby", "emailAddressErrorMessage");
+
+            /*
+             * The appearance (colour) of the alert pane which is defined in the file; ~Views/SharedViews/LayoutTemplate.cshtml, having the
+             * id; globalAlertPane, is determined by the either of the four CSS classes applied to it; alert-success, alert-info, alert-warning and alert-danger.
+             */
+
+            // The alert pane can only possess one of these classes.
+
+            // Thus, of interest, is to find out which of these classes the alert pane possess.
+            alertClass = getCurrentAlertClass();
+
+            /*
+            temporaryStoreFormField = $(".addStudentField:eq(0)");
+            fieldsValidity[0] = ((temporaryStoreFormField.val()).match(regexPatterns[0])) ? true : false;
+            if (fieldsValidity[0] == false) {
+                temporaryStoreFormField.parent().addClass("has-error");
+                temporaryStoreFormField.next().removeClass("hidden");
+            }
+
+            temporaryStoreFormField.on("input", function () {
+                fieldsValidity[0] = (($(this).val()).match(regexPatterns[0])) ? true : false;
+                if (fieldsValidity[0] == true) {
+                    $(this).parent().removeClass("has-error");
+                    $(this).next().addClass("hidden");
+                    if (allFieldsValid(fieldsValidity) == true) $("#manuallyAddStudentButton").removeAttr("disabled");
+                } else {
+                    $(this).parent().addClass("has-error");
+                    $(this).next().removeClass("hidden");
+                    $("#manuallyAddStudentButton").attr("disabled", "disabled");
+                }
+            });
+
+            temporaryStoreFormField = $(".addStudentField:eq(1)");
+            fieldsValidity[1] = ((temporaryStoreFormField.val()).match(regexPatterns[1])) ? true : false;
+            if (fieldsValidity[1] == false) {
+                temporaryStoreFormField.parent().addClass("has-error");
+                temporaryStoreFormField.next().removeClass("hidden");
+            }
+            temporaryStoreFormField.on("input", function () {
+                fieldsValidity[1] = (($(this).val()).match(regexPatterns[1])) ? true : false;
+                if (fieldsValidity[1] == true) {
+                    $(this).parent().removeClass("has-error");
+                    $(this).next().addClass("hidden");
+                    if (allFieldsValid(fieldsValidity) == true) $("#manuallyAddStudentButton").removeAttr("disabled");
+                } else {
+                    $(this).parent().addClass("has-error");
+                    $(this).next().removeClass("hidden");
+                    $("#manuallyAddStudentButton").attr("disabled", "disabled");
+                }
+            });
+
+            temporaryStoreFormField = $(".addStudentField:eq(2)");
+            fieldsValidity[2] = ((temporaryStoreFormField.val()).match(regexPatterns[2])) ? true : false;
+            if (fieldsValidity[2] == false) {
+                temporaryStoreFormField.parent().addClass("has-error");
+                temporaryStoreFormField.next().removeClass("hidden");
+            }
+            temporaryStoreFormField.on("input", function () {
+                fieldsValidity[2] = (($(this).val()).match(regexPatterns[2])) ? true : false;
+                if (fieldsValidity[2] == true) {
+                    $(this).parent().removeClass("has-error");
+                    $(this).next().addClass("hidden");
+                    if (allFieldsValid(fieldsValidity) == true) $("#manuallyAddStudentButton").removeAttr("disabled");
+                } else {
+                    $(this).parent().addClass("has-error");
+                    $(this).next().removeClass("hidden");
+                    $("#manuallyAddStudentButton").attr("disabled", "disabled");
+                }
+            });
+
+            temporaryStoreFormField = $(".addStudentField:eq(3)");
+            fieldsValidity[3] = ((temporaryStoreFormField.val()).match(regexPatterns[3])) ? true : false;
+            if (fieldsValidity[3] == false) {
+                temporaryStoreFormField.parent().addClass("has-error");
+                temporaryStoreFormField.next().removeClass("hidden");
+            }
+            temporaryStoreFormField.on("input", function () {
+                fieldsValidity[3] = (($(this).val()).match(regexPatterns[3])) ? true : false;
+                if (fieldsValidity[3] == true) {
+                    $(this).parent().removeClass("has-error");
+                    $(this).next().addClass("hidden");
+                    if (allFieldsValid(fieldsValidity) == true) $("#manuallyAddStudentButton").removeAttr("disabled");
+                } else {
+                    $(this).parent().addClass("has-error");
+                    $(this).next().removeClass("hidden");
+                    $("#manuallyAddStudentButton").attr("disabled", "disabled");
+                }
+            });*/
+
+            // The commented code above has been condensed to the following code below using the jquery each function
+            $.each($(".addStudentField"), function (index, value) {
+                temporaryStoreFormField = $(value);
+                fieldsValidity[index] = ((temporaryStoreFormField.val()).match(regexPatterns[index])) ? true : false;
+                if (fieldsValidity[index] == false) {
+                    temporaryStoreFormField.parent().addClass("has-error");
+                    temporaryStoreFormField.next().removeClass("hidden");
+                }
+
+                temporaryStoreFormField.on("input", function () {
+                    fieldsValidity[index] = (($(this).val()).match(regexPatterns[index])) ? true : false;
+                    if (fieldsValidity[index] == true) {
+                        $(this).parent().removeClass("has-error");
+                        $(this).next().addClass("hidden");
+                        if (allFieldsValid(fieldsValidity) == true) $("#manuallyAddStudentButton").removeAttr("disabled");
+                    } else {
+                        $(this).parent().addClass("has-error");
+                        $(this).next().removeClass("hidden");
+                        $("#manuallyAddStudentButton").attr("disabled", "disabled");
+                    }
+                });
+            });
+
+            if (allFieldsValid(fieldsValidity) == false) {
+                $("#manuallyAddStudentButton").attr("disabled", "disabled");
+                return;
+            }
+            // Once the code control-flow reaches this point and beyond, all fields have definitely passed client-side validation.
+
+            /*
+             * This viewModel object design conforms to the object structure of the StudentAddStudentViewModel, meaning, all attributes
+             * which are in the StudentAddStudentViewModel class are in this viewModel object.
+             */
+
+            // The purpose of doing the above-mentioned is for this viewModel object to be passed to the jQuery AJAX parameter; data, as can be seen in the AJAX call (the referred AJAX call is in the method AJAXAddStudentRecord()).
+
+            // Once data receives this object, it sends it (the Javascript object) as an argument to the controller method; public IActionResult AddStudent(StudentAddStudentViewModel model).
+            var viewModel = {
+                adminNumber: $("#adminNumber").val(),
+                fullName: $("#fullName").val(),
+                mobileNumber: $("#mobileNumber").val(),
+                emailAddress: $("#emailAddress").val()
+            }
+
+            $.ajax({
+                url: "/Student/AddStudent",
+                type: "POST",
+                data: viewModel,
+                dataType: "json",
+                error: function (xhr, status, error) {
+                    configureAlertPaneMessageError(xhr, alertClass);
+
+                    // After performing all necessary "configurations" on the alert pane, show it.
+                    $("#globalAlertPane").removeClass("hidden");
+
+                    // Unbinding event handlers from the fields.
+                    unbindAllEventsOfAllFormFields();
+
+                    // Clearing all the fields which were used to enter student data.
+                    clearAllFormFields();
+                },
+                success: function (result, status, xhr) {
+                    configureAlertPaneMessageSuccess(result, alertClass, "student", "added");
+
+                    // After performing all necessary "configurations" on the alert pane, show it.
+                    $("#globalAlertPane").removeClass("hidden");
+
+                    // Unbinding event handlers from the fields.
+                    unbindAllEventsOfAllFormFields();
+
+                    // Clearing all the fields which were used to enter student data.
+                    clearAllFormFields();
+                }
+            });
+        });
+
+        $("button[data-hide='alert']").on("click", function () {
+            // Hide the alert pane, by simply/ merely adding back the class; hidden.
+            $("#globalAlertPane").addClass("hidden");
+        });
+    });
+</script>
+@Html.Partial("_AlertPane")
+<div class="boxed" style="width: 1000px; min-height: 800px;">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10">
+        <h3>Bulk Add Students</h3>
+        <div class="dropzone" style="cursor:pointer; width:500px; border-style:dotted; border-color: blue;" id="dropzoneDiv">
+            <div class="dz-message">
+                <p style="color:blue"><strong>Drop file here OR click here, to upload the student-spreadsheet.</strong></p>
+            </div>
+        </div>
+        <div style="border:1px solid #ccc; margin-top:10px; margin-bottom:5px"></div>
+        <h3>Add Students Individually</h3>
+        <div class="form-group">
+            <label for="adminNumber">Admission Number</label>
+            @Html.TextBoxFor(x => x.adminNumber, new { @class = "form-control addStudentField", style = "width:300px" })
+            <span id="adminNumberErrorMessage" class="help-block hidden">Admission number should have the following format; xxxxxxx, where xxxxxxx are the digits in an admission number.</span>
+        </div>
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            @Html.TextBoxFor(x => x.fullName, new { @class = "form-control addStudentField", style = "width:300px" })
+            <span id="fullNameErrorMessage" class="help-block hidden">Full name should have a capital letter for the first letter in each word, and lowercase letter for the rest of letters in each word.</span>
+        </div>
+        <div class="form-group">
+            <label for="mobileNumber">Mobile Number</label>
+            @Html.TextBoxFor(x => x.mobileNumber, new { @class = "form-control addStudentField", style = "width:300px" })
+            <span id="mobileNumberErrorMessage" class="help-block hidden">Mobile number should bear the following format; 8/9xxxxxxx, where the x are the remainding digits in a phone number.</span>
+        </div>
+        <div class="form-group">
+            <label for="emailAddress">Email Address</label>
+            @Html.TextBoxFor(x => x.emailAddress, new { @class = "form-control addStudentField", style = "width:300px" })
+            <span id="emailAddressErrorMessage" class="help-block hidden">Email address should be of valid format.</span>
+        </div>
+        <button type="button" class="btn btn-success" id="manuallyAddStudentButton">Manually add Student</button>
+        <br />
+        <br />
+        <br />
+        <br />
+        <a href="@Url.Action("ViewStudents", "Student")">Back to View Students</a>
+        <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog modal-sm" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Your Attention Please</h4>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

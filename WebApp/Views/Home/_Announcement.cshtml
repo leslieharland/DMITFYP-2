@@ -1,0 +1,60 @@
+﻿<style>
+    .resize-small {
+        max-width: 150px;
+    }
+</style>
+<div class="row">
+    @foreach (var announcement in ViewData["Announcements"] as List<WebApp.Models.Announcement>)
+    {
+        <div class="boxed push-down-45" style="margin-left:20px">
+            <div class="col-md-12">
+                <div class="panel-default">
+                    <div class="post-content">
+                        <div class="post-heading">
+                            @announcement.title
+                        </div>
+                        <div class="post-body" style="min-height:300px;border-bottom:1px solid #efefef">
+                            @announcement.message
+                            <div></div>
+                            <br />
+                            Attached File(s):<br />
+                            @if (announcement.filesDisplay != null)
+                            {
+                                if (announcement.filesDisplay.Count == 0)
+                                {
+                                    <span>No files attached.</span>
+                                }
+
+                                foreach (var f in announcement.filesDisplay)
+                                {
+                                    if ((new[] { "png", "jpg", "jpeg" }).ToList().Contains(f.extension))
+                                    {
+                                        var url = (string)Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id);
+                                        <div>
+                                            <img src="@Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id)" class="resize-small" />
+                                        </div>
+                                    }
+                                    else if ((new[] { "doc", "docx", "xls", "xlsx", "ppt", "pptx" }).ToList().Contains(f.extension))
+                                    {
+                                        <div>
+                                            <a href="@Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id)">@(f.name).@(f.extension)</a>
+                                            @*<span style="font-size:10px"><b>@(WebApp.DAL.UploadService.GetFileSize(f.data.Length))</b></span>*@
+                                        </div>
+                                    }
+                                    else if ((new[] { "mp4", "wmv" }).ToList().Contains(f.extension))
+                                    {
+                                        <div>
+                                            <video width="320" height="240" controls>
+                                                <source src="@Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id)" type="video/mp4" />
+                                            </video>
+                                        </div>
+                                    }
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

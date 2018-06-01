@@ -1,0 +1,167 @@
+﻿@model WebApp.ViewModels.GroupViewGroupsViewModel
+<div class="modal fade" id="deleteGroupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelFour">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelFour">Confirm Delete Group</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXDeleteGroup($('#groupIdHiddenField'))">Yes</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirmDeleteGroupModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelSeven">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelSeven">Confirm Delete Group</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXDeleteGroup()">Yes</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirmDeleteGroupMemberModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelSix">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelSix">Confirm Delete Group Member</h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="studentIdDeleteGroupMemberHiddenField" />
+                <p>Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXDeleteGroupMember()">Yes</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirmChangeGroupRolesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelEight">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelEight">Confirm Change Group Role(s)</h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="studentIdGroupRoleOneHiddenField" />
+                <input type="hidden" id="studentIdGroupRoleTwoHiddenField" />
+                <p>Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXChangeGroupRoles()">Yes</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="cancelChangeGroupRoles()">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editGroupMemberRolesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelThree">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelThree">Edit Group Member Roles</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXEditGroupMemberRoles($('#memberRolesDiv'))">Save</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="chooseGroupMembersToAddModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelTwo">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelTwo">Choose Group Members</h4>
+            </div>
+            <div class="modal-body">
+                @{
+                    foreach (var student in Model.allStudents)
+                    {
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="@(student.student_id)studentIdGroup" class="studentCheckBox" />@student.full_name
+                            </label>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXAddGroupMembers($('.studentCheckBox:checked'))">Add Group Members</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="cancelAddGroupMembers()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="notificationOfGroupMemberDeletionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelFive">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelFive">Your Attention Please</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirmAssignSupervisorOrProjectModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelOne">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelOne">Confirm Assign Supervisor/ Project</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="" id="confirmAssignSupervisorOrProjectButton">Yes</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="" id="cancelAssignSupervisorOrProjectButton">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+

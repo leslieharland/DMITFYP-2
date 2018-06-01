@@ -1,0 +1,96 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <UserSecretsId>aspnet-WebApp-E915E545-5E49-4C6B-8C37-5E506C0B4697</UserSecretsId>
+  </PropertyGroup>
+
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
+    <PackageReference Include="Dapper" Version="1.50.4" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.8.1" />
+    <PackageReference Include="ChameleonForms" Version="3.0.2" />
+    <PackageReference Include="DocX" Version="1.1.0" />
+    <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
+    <PackageReference Include="Sendgrid" Version="9.9.0" />
+    <PackageReference Include="unirest-netcore20" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
+    <DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Views\Shared\_Layout.cshtml" />
+    <Content Remove="Views\Shared\_AlertPane.cshtml" />
+    <Content Remove="Views\Shared\_AppBase.cshtml" />
+    <Content Remove="Views\Shared\_AppMainNav.cshtml" />
+    <Content Remove="Views\Shared\_SidePanel.cshtml" />
+    <Content Remove="Views\Shared\Lockout.cshtml" />
+    <Content Remove="Views\Shared\UploadExt.cshtml" />
+    <Content Remove="Views\Shared\WebsiteDisclaimerModal.cshtml" />
+    <Content Remove="Views\Home\_Announcement.cshtml" />
+    <Content Remove="Views\Home\_LeaderGroupJoiningRequest.cshtml" />
+    <Content Remove="Views\Home\_MemberGroupJoiningRequest.cshtml" />
+    <Content Remove="wwwroot\js\jquery\jquery.min.js" />
+    <Content Remove="wwwroot\css\bootstrap.css" />
+    <Content Remove="wwwroot\js\jquery\jquery.datetimepicker.js" />
+    <Content Remove="wwwroot\js\jquery\jquery.searcher.js" />
+    <Content Remove="wwwroot\js\jquery\jquery.signalR-2.2.0.js" />
+    <Content Remove="wwwroot\js\jquery\jquery.signalR-2.2.0.min.js" />
+    <Content Remove="wwwroot\js\respond.min.js" />
+    <Content Remove="wwwroot\lib\site\app.min.css" />
+    <Content Remove="wwwroot\lib\site\app.min.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Views\Shared\_Layout.cshtml" />
+    <None Include="Views\Shared\_AlertPane.cshtml" />
+    <None Include="Views\Shared\_AppBase.cshtml" />
+    <None Include="Views\Shared\_AppMainNav.cshtml" />
+    <None Include="Views\Shared\_SidePanel.cshtml" />
+    <None Include="Views\Shared\Lockout.cshtml" />
+    <None Include="Views\Shared\UploadExt.cshtml" />
+    <None Include="Views\Shared\WebsiteDisclaimerModal.cshtml" />
+    <None Include="Views\Home\_Announcement.cshtml" />
+    <None Include="Views\Home\_LeaderGroupJoiningRequest.cshtml" />
+    <None Include="Views\Home\_MemberGroupJoiningRequest.cshtml" />
+    <None Include="wwwroot\js\jquery\jquery.min.js" />
+    <None Include="wwwroot\css\bootstrap.css" />
+    <None Include="Controllers\ProjectController.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="Controllers\GroupController.cs" Condition=" '$(EnableDefaultCompileItems)' == 'true' " />
+    <None Include="wwwroot\lib\site\app.min.css" />
+    <None Include="wwwroot\lib\site\app.min.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Filter\LayoutInjector.cs" />
+    <Compile Remove="Filter\NotEqualAttribute.cs" />
+    <Compile Remove="DAL\AccountRepository.cs" />
+    <Compile Remove="ViewModels\AccountViewModels.cs" />
+    <Compile Remove="DAL\ADOFileResourceRepository.cs" />
+    <Compile Remove="Filter\ObjectFilter.cs" />
+    <Compile Remove="Controllers\ProjectController.cs" />
+    <Compile Remove="Controllers\GroupController.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="Infrastructure\AspNet\Identity\" />
+    <Folder Include="wwwroot\js\jquery\" />
+    <Folder Include="wwwroot\js\bootstrap\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Controllers\ProposalController.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+    <Compile Update="Controllers\ProposalController.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+</Project>

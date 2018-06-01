@@ -1,0 +1,125 @@
+﻿@model dynamic
+@using WebApp.Infrastructure.AspNet
+@{
+    Type ty = Model.GetType();
+    var projectType = "";
+    if (ViewBag.Type != null)
+    {
+        projectType = ViewBag.Type;
+    }
+}
+<div class="boxed push-down-45">
+    @if (Model.ProjectHistory)
+    {
+        using (var f = Html.BeginChameleonForm(htmlAttributes: Html.Attrs().Id("history-form")))
+        {
+            using (var m = f.BeginMessage(MessageType.Information, "Not the latest submission"))
+            {
+                <a href="@Url.Action("ViewLatestSubmission", "Proposal", new {Id = Model.GroupId })">View updated</a>
+            }
+        }
+    }
+    <div class="col-sm-offset-1 col-sm-10 col-xs-12">
+        @if (Model.ProjectType == "External")
+        {
+            if (!Model.Availability)
+            {
+                if (Model.SubmittedDate != null)
+                {
+                    <p>This proposal was submitted on: </p>@Model.SubmittedDate
+                }
+            }
+            else
+            {
+                <div><h4>Project is available for view by students</h4></div>
+            }
+        }
+
+
+        @if (Model.ProjectType == "Student" && Model.Availability)
+        {
+             <div><h4>Project is now allocated to group</h4></div>
+        }
+
+
+        @foreach (var property in WebApp.Filter.TypeExtensions.GetFilteredProperties(ty))
+        {
+            <div class="row">
+                <div class="col-md-5">
+                    @if (!string.IsNullOrEmpty(@ViewData.ModelMetadata.Properties.SingleOrDefault(x => x.PropertyName == @property.Name).DisplayName))
+                    {
+                        <div class="col-property">
+                            <strong>@ViewData.ModelMetadata.Properties.SingleOrDefault(x => x.PropertyName == @property.Name).DisplayName</strong>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-property">
+                            <strong>@property.Name</strong>
+                        </div>
+                    }
+                </div>
+                <div class="col-md-5">
+                    <div class="col-property">
+                        @Model.GetType().GetProperty(property.Name).GetValue(Model, null)
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-md-5" style="margin-top: 20px;">
+                <div>
+
+                    @switch ((string)Model.ProjectType)
+                    {
+                        case "External":
+                            if (HttpContext.Session.GetBoolean("IndexUser") == false)
+                            {
+                                <a href="/proposal">Back to list</a>
+                            }
+                            else
+                            {
+                                <a href="/proposal/user">Back to list</a>
+                                HttpContext.Session.SetBoolean("IndexUser", false);
+                            }
+                            break;
+                        case "Student":
+                            <a href="/proposal/student">Back to list</a>
+                            break;
+                    }
+                  
+                </div>
+            </div>
+
+            @if (!Model.Availability)
+            {
+                <div class="col-md-5" style="margin-left: -2px;">
+                    @*Under approval or before deadline*@
+
+                      @if (projectType != "External" && projectType != "Student" && Model.SubmittedDate == null)
+                      {
+                        <button class="btn-no-border btn-default" onclick="location.href = '@Url.Action("Edit", "Proposal", new { Id = ViewBag.CurrentQuery })';"><i class="glyphicon glyphicon-pencil" style="margin-right: 4px;"></i><strong>Edit</strong></button>
+                      }
+
+
+                        @using (Html.BeginForm("Approve", "Proposal", new { Id = Model.Id }, FormMethod.Post, new { @class = "form-inline" }))
+                        {
+                        <button class="btn-no-border btn-default"><i class="glyphicon glyphicon-check" style="margin-right: 4px;"></i><strong>Approve</strong></button>
+                        }
+
+                    <div>&nbsp;&nbsp;&nbsp;</div>
+                </div>
+            }
+            else
+            {
+                using (Html.BeginForm("Generate", "Proposal", new { Id = Model.Id }, FormMethod.Post, new { @class = "form-inline" }))
+                {
+                    <button type="submit" class="btn-default" style="border-radius: 10px; background: #cccccc;"><strong>Generate Word document</strong></button>
+                }
+
+            }
+        </div>
+    </div>
+</div>
+

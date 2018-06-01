@@ -1,0 +1,43 @@
+﻿@model WebApp.Models.StudentContact
+@{ 
+    var UserType = (IEnumerable<SelectListItem>)ViewData["UserType"];
+}
+<div class="student create-form">
+    @using (var f = Html.BeginChameleonForm("/Account/CreateStudent"))
+    {
+        @Html.DropDownListFor(m => m.UserTypeId, new SelectList(UserType, "Value", "Text", Model.UserTypeId))
+        <input type="hidden" name="model.prefix" value="StudentData" />
+        using (var s = f.BeginSection("Add Single User", null))
+        {
+            @s.FieldFor(m => m.FullName)
+            @s.FieldFor(m => m.Admin)
+            @s.FieldFor(m => m.Email)
+            @s.FieldFor(m => m.Mobile)
+        }
+
+        <button type="submit" class="btn btn-default btn-sm" title="Create Account" style="">Create Account</button>
+
+        <hr />
+        using (var s = f.BeginSection("Bulk Add User", null, new { @class = "class" }.ToHtmlAttributes()))
+        {
+            <button type="button" id="btnBulkAdd" name="btnBulkAdd" onclick="location.href='@Url.Action("BulkAdd", "Account")'" title="Bulk Add via Excel file" class="btn btn-default btn-sm">
+                Upload Spreadsheet
+            </button>
+
+        }
+
+    }
+</div>
+<script type="text/javascript">
+    $(function () {
+        $("#UserTypeId").change(function () {
+            if ($(this).val() == "1") {
+                $('#user_content').load('/Account/GetStudentForm');
+            }
+            else if ($(this).val() == "2") {
+                $('#user_content').load('/Account/GetLecturerForm');
+            }
+        });
+    });
+
+</script>

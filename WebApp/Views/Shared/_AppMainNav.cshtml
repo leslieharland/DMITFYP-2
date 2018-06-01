@@ -1,0 +1,126 @@
+﻿@using WebApp.Infrastructure.AspNet
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using WebApp.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<style>
+    .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: .25rem 1.5rem;
+        clear: both;
+        font-weight: 400;
+        color: #212529;
+        text-align: inherit;
+        white-space: nowrap;
+        background-color: transparent;
+        border: 0;
+    }
+
+    #logoutForm{
+        width: 100%;
+    }
+    button[type="submit"].dropdown-item {
+
+        width: 100%;
+        padding-left: 0px;
+    }
+
+    .dropdown-menu{
+        width: 80%;
+        top: 200%;
+    }
+</style>
+<div class='navbar navbar-fixed-top' style="background: white;">
+    <div class="container">
+        <div class='navbar-header'>
+            <div class='navbar-brand' onclick="location.href = 'http://localhost:5000';" style="cursor: pointer">
+                <i class="fa fa-cloud" style="text-shadow: 1px 1px white, -1px -1px #666;"></i>WebApp
+            </div>
+        </div>
+            <div id="navbar" class="navbar-collapse collapse" role="navigation">
+                <ul class='nav navbar-nav navbar-right'>
+                    @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+    {
+                <li>
+
+                    <a class='nav-link' href="@Url.Action("Index", "Project")">
+                        Projects
+                    </a>
+                </li>
+                <li>
+                    <a class='nav-link' href="@Url.Action(User.IsInRole("Admin") ? "ViewGroups" : "LecturerViewGroups", "Group")">
+                        Groups
+                    </a>
+                </li>
+
+                <li>
+                    <a class='nav-link' href="@Url.Action("Compose", "Contact")">
+                        Contact
+                    </a>
+                </li>
+}
+else
+{
+                <li>
+                    <a class='nav-link' href="@Url.Action("StudentIndex", "Project")">
+                        Projects
+                    </a>
+                </li>
+                <li>
+                    <a class='nav-link' href="@Url.Action("StudentViewGroups", "Group")">
+                        Groups
+                    </a>
+                </li>
+}
+                    @if (User.IsInRole("Admin"))
+    {
+
+                        <li>
+                            <div class="btn-group nav-link" style="display:block; padding: 10px 5px; ">
+
+                                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span style="color: #337ab7;">Manage Users</span>
+                                    <i class="fas fa-angle-down"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <button class="dropdown-item" type="button" onclick="location.href='@Url.Action("ViewStudents", "Student")'">Students</button>
+                                        <button class="dropdown-item" type="button" onclick="location.href='@Url.Action("ViewLecturers", "Lecturer")'">Lecturers</button>
+                                </div>
+                            </div>
+
+                         </li>
+
+
+}
+
+                    @if (SignInManager.IsSignedIn(User))
+                     {
+                        <li>
+                            <div class="btn-group nav-link" style="display:block; padding: 10px 5px; ">
+
+                                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span style="color: #337ab7;">@UserManager.GetUserName(User)</span>
+                                    <i class="fas fa-angle-down"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <button class="dropdown-item" type="button" onclick="location.href='@Url.Action("Update", "Account")'">Change Profile</button>
+                                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="navbar-right">
+
+                                        <button type="submit" class="dropdown-item">Log out</button>
+
+                                    </form>
+                                </div>
+                            </div>
+
+                         </li>
+                    }
+
+                </ul>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,78 @@
+﻿<script>
+    function updatePendingGroupJoiningRequestBadge() {
+        $("#pendingGroupJoiningRequestsBadge").text(parseInt($("#pendingGroupJoiningRequestsBadge").text()) - 1);
+        if ($("#pendingGroupJoiningRequestsBadge").text() == "0") {
+            $("#pendingGroupJoiningRequestsBadge").parent().fadeOut("slow");
+        }
+    }
+    $("document").ready(function () {
+        $("#pendingGroupJoiningRequestsButton").click(function () {
+            $("#pendingGroupJoiningRequestsDiv").slideToggle();
+        });
+        $(".acceptGroupJoiningRequestButton").click(function () {
+            var groupJoiningRequestButton = $(this);
+            $.ajax({
+                url: "/GroupJoiningRequest/AcceptGroupJoiningRequest",
+                data: {
+                    groupJoiningRequestId: $(this).parent().attr("id").split("groupJoiningRequest")[0]
+                },
+                dataType: "json",
+                type: "GET",
+                error: function (xhr, status, error) {
+                    alertify.notify("Sorry, HTTP " + xhr.status + " " + xhr.statusText + " error has occured, please contact your system administrator for assistance.", "error", function () { });
+                },
+                success: function (result, status, xhr) {
+                    if (result.rowsAffected > 0 && result.error == undefined) {
+                        alertify.notify("All " + result.rowsAffected + " group joining request(s) were successfully accepted.", "success", function () { });
+                        groupJoiningRequestButton.parent().fadeOut("slow");
+                        updatePendingGroupJoiningRequestBadge();
+                    } else {
+                        alertify.notify("Only " + result.rowsAffected + " group joining request(s) were accepted because; " + result.error + " Please contact your system administrator for assistance, if neccesary.", "error", function () { });
+                    }
+                }
+            });
+        });
+        $(".rejectGroupJoiningRequestButton").click(function () {
+            var groupJoiningRequestButton = $(this);
+            $.ajax({
+                url: "/GroupJoiningRequest/RejectGroupJoiningRequest",
+                data: {
+                    groupJoiningRequestId: $(this).parent().attr("id").split("groupJoiningRequest")[0]
+                },
+                dataType: "json",
+                type: "GET",
+                error: function (xhr, status, error) {
+                    alertify.notify("Sorry, HTTP " + xhr.status + " " + xhr.statusText + " error has occured, please contact your system administrator for assistance.", "error", function () { });
+                },
+                success: function (result, status, xhr) {
+                    if (result.rowsAffected > 0 && result.error == undefined) {
+                        alertify.notify("All " + result.rowsAffected + " group joining request(s) were successfully rejected.", "success", function () { });
+                        groupJoiningRequestButton.parent().fadeOut("slow");
+                        updatePendingGroupJoiningRequestBadge();
+                    } else {
+                        alertify.notify("Only " + result.rowsAffected + " group joining request(s) were rejected because; " + result.error + " Please contact your system administrator for assistance, if neccesary.", "error", function () { });
+                    }
+                }
+            });
+        });
+    });
+</script>
+<div class="row">
+    <div class="col-md-12">
+        <button class="btn btn-success" type="button" id="pendingGroupJoiningRequestsButton" style="margin-bottom:10px">
+            Pending Group Joining Request(s) <span class="badge" id="pendingGroupJoiningRequestsBadge">@(((List<dynamic>)ViewData["GroupJoiningRequests"]).Count)</span>
+        </button>
+        <div id="pendingGroupJoiningRequestsDiv" style="display:none; margin-top:10px">
+            @{
+                foreach (var groupJoiningRequest in (List<dynamic>)ViewData["GroupJoiningRequests"])
+                {
+                    <div class="alert alert-info" role="alert" id="@(groupJoiningRequest.group_joining_request_id)groupJoiningRequest">
+                        <strong><u>@groupJoiningRequest.full_name</u></strong> wishes to join your group!
+                        <button style="margin-left:15px" type="button" class="btn btn-default acceptGroupJoiningRequestButton">Accept</button>
+                        <button style="margin-left:5px" type="button" class="btn btn-default rejectGroupJoiningRequestButton">Reject</button>
+                    </div>
+                }
+             }
+        </div>
+    </div>
+</div>

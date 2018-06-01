@@ -1,0 +1,16 @@
+﻿@{
+    int page = (int)TempData["Page"];
+    int postCount = page * 10;
+    var list = ViewData["Announcements"] as List<WebApp.Models.Announcement>;
+}
+
+@foreach (var announcement in list)
+{
+    Html.RenderPartial("Post", announcement);
+    @*postCount++;
+    if (postCount % 10 == 0)
+    {
+        <a href="@Url.Action("Get", "Announcement", new { page = TempData["Page"] })" class="posts-next-10 hidden">next page</a>
+    }*@
+}
+

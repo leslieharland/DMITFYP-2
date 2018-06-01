@@ -1,0 +1,118 @@
+﻿@model IEnumerable<WebApp.Models.Project>
+@{
+    ViewBag.Title = "Index";
+}
+
+<link rel="stylesheet" type="text/css" href="~/Content/jquery.datetimepicker.css" />
+<script src="~/Scripts/jquery.datetimepicker.js"></script>
+<script>
+    var previousFromDateTimePickerValue = "@(ViewData["ProjectChoiceWindowPeriodStartDate"])";
+    var previousToDateTimePickerValue = "@(ViewData["ProjectChoiceWindowPeriodEndDate"])";
+    $("document").ready(function () {
+        $("#fromDateTimePicker").datetimepicker({
+            value: "@(ViewData["ProjectChoiceWindowPeriodStartDate"])",
+        });
+
+        $("#toDateTimePicker").datetimepicker({
+            value: "@(ViewData["ProjectChoiceWindowPeriodEndDate"])",
+        });
+
+        $("#submitSetProjectChoiceWindowPeriodButton").click(function () {
+            if ($("#fromDateTimePicker").datetimepicker("getDate").val().split(" ")[0] == $("#toDateTimePicker").datetimepicker("getDate").val().split(" ")[0]) {
+                if ($("#fromDateTimePicker").datetimepicker("getDate").val().split(" ")[1].split(":")[0] > $("#toDateTimePicker").datetimepicker("getDate").val().split(" ")[1].split(":")[0]) {
+                    alertify.alert("Error", "\"From\" date cannot be later than \"To\" date.");
+                    return;
+                } else {
+                    if ($("#fromDateTimePicker").datetimepicker("getDate").val().split(" ")[1].split(":")[1] > $("#toDateTimePicker").datetimepicker("getDate").val().split(" ")[1].split(":")[1]) {
+                        alertify.alert("Error", "\"From\" date cannot be later than \"To\" date.");
+                        return;
+                    }
+                }
+            } else {
+                if (!($("#fromDateTimePicker").datetimepicker("getDate").val() < $("#toDateTimePicker").datetimepicker("getDate").val())) {
+                    alertify.alert("Error", "\"From\" date cannot be later than \"To\" date.");
+                    $("#fromDateTimePicker").datetimepicker("getDate").val(previousFromDateTimePickerValue);
+                    $("#toDateTimePicker").datetimepicker("getDate").val(previousToDateTimePickerValue);
+                    return;
+                }
+            }
+
+            $.ajax({
+                url: "ProjectChoice/SubmitProjectChoiceWindowPeriod",
+                data: {
+                    startDate: $("#fromDateTimePicker").datetimepicker("getDate").val(),
+                    endDate: $("#toDateTimePicker").datetimepicker("getDate").val()
+                },
+                type: "GET",
+                error: function (xhr, status, error) {
+                    alertify.alert("Error", "Sorry, HTTP " + xhr.status + " " + xhr.statusText + " error has occured, please contact your system administrator for assistance.");
+                    //alert("Sorry, HTTP " + xhr.status + " " + xhr.statusText + " error has occured, please contact your system administrator for assistance.");
+                },
+                success: function (result, status, xhr) {
+                    previousFromDateTimePickerValue = $("#fromDateTimePicker").datetimepicker("getDate").val();
+                    previousToDateTimePickerValue = $("#toDateTimePicker").datetimepicker("getDate").val();
+                    alertify.alert("Success", "Window Period successfully updated.");
+                }
+            });
+        });
+
+        $("#downloadProposalSpreadsheetButton").click(function () {
+            var checkedCheckboxes = $(".proposalSpreadsheetDataOptionsCheckbox:checked");
+            $(this).button("loading");
+
+            if (checkedCheckboxes.length == 0) {
+                alert("No checkboxes selected.");
+            }
+            else if (checkedCheckboxes.length == 1) {
+                if (checkedCheckboxes.attr("id") == "studentProposalsCheckbox") {
+                    window.location.href = "/Project/DownloadStudentSubmittedProposalsSpreadsheet";
+                } else {
+                    if (checkedCheckboxes.attr("id") == "industryLecturerProposalsCheckbox") {
+                        window.location.href = "/Project/DownloadIndustryLecturerSubmittedProposalsSpreadsheet";
+                    }
+                }
+            } else {
+                window.location.href = "/Project/DownloadCombinedProposalsSpreadsheet";
+            }
+
+            var downloadProgressTimer = window.setInterval(function () {
+                if (getCookie("completedDownloadToken") == "downloaded") {
+                    $("#downloadProposalSpreadsheetButton").button("reset");
+                    setCookie("completedDownloadToken", "initial");
+                    clearInterval(downloadProgressTimer);
+                }
+            }, 1);
+        });
+    });
+</script>
+<div class="boxed" style="width:1000px">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10" style="padding-top:10px;padding-bottom:15px">
+        @{
+            bool admin = WebApp.Infrastructure.AspNet.HttpContext.Session.GetBoolean("IsAdmin");
+            if (admin)
+            {
+                <h3>Specify Project Choice's Window Period</h3>
+                <p>From: <input type="text" id="fromDateTimePicker" /></p>
+                <p>To: <input type="text" id="toDateTimePicker" style="margin-left:17px" /></p>
+                <button type="button" class="btn btn-success" id="submitSetProjectChoiceWindowPeriodButton">Submit</button>
+            }
+        }
+        <br />
+        <br />
+        <h3>ALL Proposals</h3>
+        <b>Download Proposal Spreadsheet</b>
+        <div class="checkbox">
+            <span>Include: </span>
+            <label class="checkbox-inline">
+                <input type="checkbox" class="proposalSpreadsheetDataOptionsCheckbox" id="studentProposalsCheckbox" />Student Proposals
+            </label>
+            <label class="checkbox-inline">
+                <input type="checkbox" class="proposalSpreadsheetDataOptionsCheckbox" id="industryLecturerProposalsCheckbox" />Industry-Lecturer Proposals
+            </label>
+        </div>
+        <button id="downloadProposalSpreadsheetButton" type="button" data-loading-text="Crunching Data..." class="btn btn-success">Download</button>
+        @foreach (var p in Model)
+        {
+        }
+    </div>
+</div>

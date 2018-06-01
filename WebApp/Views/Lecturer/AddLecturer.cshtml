@@ -1,0 +1,147 @@
+﻿@model WebApp.ViewModels.LecturerAddLecturerViewModel
+<script>
+    function allFieldsValid(fieldsValidityArray) {
+        var valid = true;
+        for (var a = 0; a < fieldsValidityArray.length; ++a) {
+            if (fieldsValidityArray[a] == false) {
+                valid = false;
+            }
+        }
+        return valid;
+    }
+
+    function clearAllFormFields() {
+        $.each($(".form-group"), function (index, value) {
+            $($(value).children()[1]).val("");
+        });
+    }
+
+    function unbindAllEventsOfAllFormFields() {
+        $.each($(".form-group"), function (index, value) {
+            $($(value).children()[1]).unbind();
+        });
+    }
+
+    $("document").ready(function () {
+        $("#addLecturerButton").click(function () {
+            var regexPatterns = ["^[0-9]{5}$", "^([A-Z]{1}[a-z]+){1}( [A-Z]{1}[a-z]+)*$", "^[896]{1}[0-9]{7}$", "^[A-Za-z0-9\.]+@@([A-Za-z]+)(\.[A-Za-z]+)*$"];
+            var temporaryStoreFormField;
+            var alertClass;
+            var fieldsValidity = [false, false, false, false];
+
+            $("#staffId").attr("aria-describedby", "adminNumberErrorMessage");
+            $("#fullName").attr("aria-describedby", "fullNameErrorMessage");
+            $("#contactNumber").attr("aria-describedby", "mobileNumberErrorMessage");
+            $("#emailAddress").attr("aria-descsribedby", "emailAddressErrorMessage");
+
+            alertClass = getCurrentAlertClass();
+
+            $.each($(".addLecturerField"), function (index, value) {
+                temporaryStoreFormField = $(value);
+                fieldsValidity[index] = ((temporaryStoreFormField.val()).match(regexPatterns[index])) ? true : false;
+                if (fieldsValidity[index] == false) {
+                    temporaryStoreFormField.parent().addClass("has-error");
+                    temporaryStoreFormField.next().removeClass("hidden");
+                }
+
+                temporaryStoreFormField.on("input", function () {
+                    fieldsValidity[index] = (($(this).val()).match(regexPatterns[index])) ? true : false;
+                    if (fieldsValidity[index] == true) {
+                        $(this).parent().removeClass("has-error");
+                        $(this).next().addClass("hidden");
+                        if (allFieldsValid(fieldsValidity) == true) $("#addLecturerButton").removeAttr("disabled");
+                    } else {
+                        $(this).parent().addClass("has-error");
+                        $(this).next().removeClass("hidden");
+                        $("#addLecturerButton").attr("disabled", "disabled");
+                    }
+                });
+            });
+
+            if (allFieldsValid(fieldsValidity) == false) {
+                $("#addLecturerButton").attr("disabled", "disabled");
+                return;
+            }
+
+            // Once the code control-flow reaches this point and beyond, all fields have definitely passed client-side validation.
+
+            var viewModel = {
+                staffId: $("#staffId").val(),
+                fullName: $("#fullName").val(),
+                contactNumber: $("#contactNumber").val(),
+                emailAddress: $("#emailAddress").val(),
+                admin: document.getElementById("admin").checked
+            }
+
+            $.ajax({
+                url: "/Lecturer/AddLecturer",
+                type: "POST",
+                data: viewModel,
+                dataType: "json",
+                error: function (xhr, status, error) {
+                    configureAlertPaneMessageError(xhr, alertClass);
+
+                    // After performing all necessary "configurations" on the alert pane, show it.
+                    $("#globalAlertPane").removeClass("hidden");
+
+                    // Unbinding event handlers from the fields.
+                    unbindAllEventsOfAllFormFields();
+
+                    // Clearing all the fields which were used to enter student data.
+                    clearAllFormFields();
+                },
+                success: function (result, status, xhr) {
+                    configureAlertPaneMessageSuccess(result, alertClass, "lecturer", "added");
+
+                    // After performing all necessary "configurations" on the alert pane, show it.
+                    $("#globalAlertPane").removeClass("hidden");
+
+                    // Unbinding event handlers from the fields.
+                    unbindAllEventsOfAllFormFields();
+
+                    // Clearing all the fields which were used to enter student data.
+                    clearAllFormFields();
+                }
+            });
+
+        });
+
+        $("button[data-hide='alert']").on("click", function () {
+            // Hide the alert pane, by simply/ merely adding back the class; hidden.
+            $("#globalAlertPane").addClass("hidden");
+        });
+
+    });
+</script>
+@Html.Partial("_AlertPane")
+<div class="boxed" style="width:1000px">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10" style="padding-bottom:10px">
+        <h3>Add Lecturers</h3>
+        <div class="form-group">
+            <label for="staffId">Staff ID</label>
+            @Html.TextBoxFor(x => x.staffId, new { @class="form-control addLecturerField", style="width:300px"})
+            <span id="staffIdErrorMessage" class="help-block hidden">Staff ID should have the following format; xxxxx, where xxxxx are the digits in a staff ID.</span>
+        </div>
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            @Html.TextBoxFor(x => x.fullName, new { @class="form-control addLecturerField", style="width:300px"})
+            <span id="fullNameErrorMessage" class="help-block hidden">Full name should have a capital letter for the first letter in each word, and lowercase letter for the rest of letters in each word.</span>
+        </div>
+        <div class="form-group">
+            <label for="contactNumber">Contact Number</label>
+            @Html.TextBoxFor(x => x.contactNumber, new { @class="form-control addLecturerField", style="width:300px"})
+            <span id="contactNumberErrorMessage" class="help-block hidden">Mobile number should bear the following format; 8/9/6xxxxxxx, where the x are the remainding digits in a phone number.</span>
+        </div>
+        <div class="form-group">
+            <label for="emailAddress">Email Address</label>
+            @Html.TextBoxFor(x => x.emailAddress, new { @class="form-control addLecturerField", style="width:300px"})
+            <span id="emailAddressErrorMessage" class="help-block hidden">Email address should be of valid format.</span>
+        </div>
+        <div class="checkbox">
+            <label>
+                @Html.CheckBoxFor(x => x.admin) FYP MC
+            </label>
+        </div>
+        <button type="button" class="btn btn-success" id="addLecturerButton">Add Lecturer</button>
+    </div>
+</div>

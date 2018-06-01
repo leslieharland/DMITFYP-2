@@ -1,0 +1,155 @@
+﻿@model WebApp.ViewModels.GroupStudentViewGroupsViewModel
+@using Microsoft.AspNetCore.Http
+<style>
+    .groupRoleDropDownList {
+        max-width: 100% !important;
+    }
+</style>
+<script src="~/Scripts/require/studentgroup.js"></script>
+@Html.Partial("_AlertPane")
+<div class="boxed" style="width: 1000px; min-height: 800px;padding-bottom:10px">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10">
+        @{string groupRole = Context.Session.GetString("GroupRole");
+            if (groupRole != null)
+            {
+                if (groupRole == "1")
+                {
+                    <h3>Make Project Choices</h3>
+                    <p id="lastSubmittedDateParagraph">Last Submitted Date: </p>
+                    <div class="form-inline" style="margin-top:20px">
+                        <div class="form-group">
+                            <label for="firstProjectChoiceDropdownList">1.</label>
+                            @Html.DropDownList("firstProjectChoiceDropDownList", (IEnumerable<SelectListItem>)ViewData["projects"], new { @class = "form-control projectChoiceDropDownList", id = "firstProjectChoiceDropDownList", style = "width:500px" })
+                            <span id="firstProjectChoiceDropDownListErrorMessage" class="help-block hidden"></span>
+                        </div>
+                    </div>
+                    <div class="form-inline" style="margin-top:20px">
+                        <div class="form-group">
+                            <label for="secondProjectChoiceDropdownList">2.</label>
+                            @Html.DropDownList("secondProjectChoiceDropDownList", (IEnumerable<SelectListItem>)ViewData["projects"], new { @class = "form-control projectChoiceDropDownList", id = "secondProjectChoiceDropDownList", style = "width:500px" })
+                            <span id="secondProjectChoiceDropDownListErrorMessage" class="help-block hidden"></span>
+                        </div>
+                    </div>
+                    <div class="form-inline" style="margin-top:20px">
+                        <div class="form-group">
+                            <label for="thirdProjectChoiceDropdownList">3.</label>
+                            @Html.DropDownList("thirdProjectChoiceDropDownList", (IEnumerable<SelectListItem>)ViewData["projects"], new { @class = "form-control projectChoiceDropDownList", id = "thirdProjectChoiceDropDownList", style = "width:500px" })
+                            <span id="thirdProjectChoiceDropDownListErrorMessage" class="help-block hidden"></span>
+                        </div>
+                    </div>
+                    <div class="form-inline" style="margin-top:20px">
+                        <div class="form-group">
+                            <label for="fourthProjectChoiceDropdownList">4.</label>
+                            @Html.DropDownList("fourthProjectChoiceDropDownList", (IEnumerable<SelectListItem>)ViewData["projects"], new { @class = "form-control projectChoiceDropDownList", id = "fourthProjectChoiceDropDownList", style = "width:500px" })
+                            <span id="fourthProjectChoiceDropDownListErrorMessage" class="help-block hidden"></span>
+                        </div>
+                    </div>
+                    <br />
+                    <button type="button" class="btn btn-success" id="submitProjectChoiceButton" style="margin-top:20px">Submit Project Choice</button>
+                    IEnumerable<WebApp.Models.ProjectChoice> projectChoices = ((IEnumerable<WebApp.Models.ProjectChoice>)ViewData["projectChoices"]);
+                    if (projectChoices.Count() != 0)
+                    {
+                        <script>
+                        $("#firstProjectChoiceDropDownList").val("@(projectChoices.ElementAt(0).project_id)");
+                        $("#secondProjectChoiceDropDownList").val("@(projectChoices.ElementAt(1).project_id)");
+                        $("#thirdProjectChoiceDropDownList").val("@(projectChoices.ElementAt(2).project_id)");
+                        $("#fourthProjectChoiceDropDownList").val("@(projectChoices.ElementAt(3).project_id)");
+                        $("#lastSubmittedDateParagraph").append("@(projectChoices.ElementAt(0).submitted_date.ToString("yyyy/MM/dd HH:mm"))");
+                        </script>
+                    }
+                    else
+                    {
+                        <script>$("#lastSubmittedDateParagraph").append("No project choices submitted yet.");</script>
+                    }
+                }
+                else
+                {
+                    if (!(groupRole == "2" || groupRole == "3"))
+                    {
+                        <h3>Add Group</h3>
+                        <button type="button" class="btn btn-success" id="createGroupButton" style="width:300px">Create A GROUP</button>
+                    }
+                }
+            }
+        }
+        <h3>View Groups</h3>
+        @{
+            string errorMessage = (string)ViewData["error"];
+            if (errorMessage != null)
+            {
+                <div class="jumbotron" style="width:auto"><h4>Sorry, no students are shown as the following error occured; @(errorMessage) Please contact your system administrator for assistance.</h4></div>
+                // Don't render the rest of the page given the error.
+                return;
+            }
+        }
+        @{
+            int iterationCount = 0;
+            var totalNumberOfGroups = (int)ViewData["totalNumberOfGroups"];
+            List<WebApp.Models.Student> listOfStudents = ((List<WebApp.Models.Student>)(Model.groupDetails.GetType().GetProperty("groupMembers").GetValue(Model.groupDetails, null)));
+        }
+        <div class="form-inline@(totalNumberOfGroups == 0 ? " hidden" : "")" id="assignSupervisorAndProjectForGroupForm">
+            <div class="form-group">
+                <label for="supervisorToAssign">Assigned Supervisor:</label>
+                @Html.DropDownListFor(x => x.supervisorToAssign, Model.allSupervisors, "-- None Assigned --", new { @class = "form-control", disabled = "disabled" })
+            </div>
+            <br />
+            <br />
+            <div class="form-group">
+                <label for="projectToAssign">Assigned Project:</label>
+                @Html.DropDownListFor(x => x.projectToAssign, Model.allProjects, "-- None Assigned --", new { @class = "form-control", style = "margin-left:26px", disabled = "disabled" })
+            </div>
+        </div>
+        <table class="table table-bordered table-hover@(totalNumberOfGroups == 0 ? " hidden" : "")" id="groupTable" style="width:auto;margin-top:10px">
+            <thead>
+                <tr>
+                    <th>Group Number</th>
+                    <th>Admission Number</th>
+                    <th>Name</th>
+                    <th>Member Role</th>
+                    <th>Send Group Joining Request</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    if (listOfStudents != null)
+                    {
+                        foreach (var student in listOfStudents)
+                        {
+                            ++iterationCount;
+                            <tr>
+                                @{
+                                    if (iterationCount == 1)
+                                    {
+                                        <td rowspan="@listOfStudents.Count" style="vertical-align:middle;text-align:center"><strong>@Model.groupDetails.GetType().GetProperty("groupNumber").GetValue(Model.groupDetails, null)</strong></td>
+                                    }
+                                }
+                                <td>@student.admin_number</td>
+                                <td>@student.full_name</td>
+                                <td>@(student.group_role == "1" ? "Leader" : (student.group_role == "2" ? "Assistant Leader" : "Member"))</td>
+                                @{
+                                    if (iterationCount == 1)
+                                    {
+                                        <td rowspan="@listOfStudents.Count" style="vertical-align:middle;text-align:center">
+                                            <button type="button" class="btn btn-success btn-block" id="sendGroupJoiningRequestButton" @(listOfStudents.Count == 5 ? "disabled" : "")>Send</button>
+                                            <input type="hidden" id="groupIdHiddenField" value="@Model.groupDetails.GetType().GetProperty("groupId").GetValue(Model.groupDetails, null)" />
+                                        </td>
+                                    }
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-default@(totalNumberOfGroups == 0 ? " hidden" : "")" id="leftArrowViewGroup" disabled>
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        </button>
+        @{
+            <span id="groupNumberIndicationSpan" class="@(totalNumberOfGroups == 0 ? "hidden" : "")"><strong>1</strong> of <strong>@totalNumberOfGroups</strong></span>
+        }
+        <button type="button" class="btn btn-default@(totalNumberOfGroups == 0 ? " hidden" : "")" id="rightArrowViewGroup" @(totalNumberOfGroups == 1 ? "disabled" : "")>
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        </button>
+        <h4 id="noGroupsCreatedYetH4" class="@(totalNumberOfGroups == 0 ? "" : "hidden")">No groups created yet.</h4>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNetCore.Http
+@{
+    int? studentId = Context.Session.GetInt32("SID");
+    int sId = studentId ?? default(int);
+    string groupRole = Context.Session.GetString("GroupRole");
+    if (studentId != 0)
+    {
+        if (groupRole == "1")
+        {
+            @await Html.PartialAsync("~/Views/Home/_LeaderGroupJoiningRequest.cshtml")
+        }
+        else
+        {
+            @await Html.PartialAsync("~/Views/Home/_MemberGroupJoiningRequest.cshtml")
+        }
+     }
+}
+@await Html.PartialAsync("~/Views/Home/_Announcement.cshtml")

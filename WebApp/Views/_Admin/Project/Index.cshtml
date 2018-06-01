@@ -1,0 +1,55 @@
+﻿@model IEnumerable<WebApp.Models.Project>
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<script>
+    $("document").ready(function () {
+        //$("a[href='@Url.Action("Index", "Project")']").parent().
+        $("#downloadProposalSpreadsheetButton").click(function () {
+            var checkedCheckboxes = $(".proposalSpreadsheetDataOptionsCheckbox:checked");
+            $(this).button("loading");
+
+            if (checkedCheckboxes.length == 0) {
+                alert("No checkboxes selected.");
+            }
+            else if (checkedCheckboxes.length == 1) {
+                if (checkedCheckboxes.attr("id") == "studentProposalsCheckbox") {
+                    window.location.href = "/Project/DownloadStudentSubmittedProposalsSpreadsheet";
+                } else {
+                    if (checkedCheckboxes.attr("id") == "industryLecturerProposalsCheckbox") {
+                        window.location.href = "/Project/DownloadIndustryLecturerSubmittedProposalsSpreadsheet";
+                    }
+                }
+            } else {
+                window.location.href = "/Project/DownloadCombinedProposalsSpreadsheet";
+            }
+
+            var downloadProgressTimer = window.setInterval(function () {
+                if (getCookie("completedDownloadToken") == "downloaded") {
+                    $("#downloadProposalSpreadsheetButton").button("reset");
+                    setCookie("completedDownloadToken", "initial");
+                    clearInterval(downloadProgressTimer);
+                }
+            }, 1);
+        });
+    });
+</script>
+<div id="project-data">
+    <b>Download Proposal Spreadsheet</b>
+    <div class="checkbox">
+        <span>Include: </span>
+        <label class="checkbox-inline">
+            <input type="checkbox" class="proposalSpreadsheetDataOptionsCheckbox" id="studentProposalsCheckbox" />Student Proposals
+        </label>
+        <label class="checkbox-inline">
+            <input type="checkbox" class="proposalSpreadsheetDataOptionsCheckbox" id="industryLecturerProposalsCheckbox" />Industry-Lecturer Proposals
+        </label>
+    </div>
+    <button id="downloadProposalSpreadsheetButton" type="button" data-loading-text="Crunching Data..." class="btn btn-success">Download</button>
+    @foreach (var p in Model)
+    {
+
+    }
+</div>

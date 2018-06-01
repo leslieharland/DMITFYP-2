@@ -1,0 +1,98 @@
+﻿@using ChameleonForms.Component.Config
+@using WebApp.Infrastructure.AspNet
+@using WebApp.ViewModels.InitiatedProject
+@model WebApp.ViewModels.InitiatedProject.InitiatedProjectViewModel
+
+@section Content{
+    <link href="~/dist/form-intf.min.css" rel="stylesheet" />
+    <style>
+    textarea:focus::-webkit-input-placeholder {
+        opacity: 0;
+    }
+
+    .remove, .removeFromView {
+        background-image: url('../../Content/icons/remove.png');
+        float: right;
+        padding: 7px;
+        border: none;
+        outline: none;
+        -webkit-appearance: none;
+    }
+</style>
+ }
+@section Scripts{
+<script src="~/dist/form-intf.min.js"></script>
+<script src="~/Scripts/require/project-create.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $.fn.editable.defaults.mode = 'inline';
+        $('.editable').each(function (idx) {
+            $(this).editable();
+        })
+
+        var removeList = [];
+        $('.remove').click(function (e) {
+            e.preventDefault();
+            var anchorObj = $(this).next();
+            var id = anchorObj.attr('data-id');
+            removeList.push(id);
+            $('#removeIds').val(removeList.join(','));
+
+            $(anchorObj).remove();
+            $(this).next().closest('textarea').remove();
+            $(this).remove();
+        });
+    });
+</script>
+}
+
+@if (ViewBag.NotInGroup == null)
+{
+    <div class="boxed push-down-45" style="padding: 30px 16px;" id="self-init-div">
+        @using (var f = Html.BeginChameleonForm("/project/edit", FormMethod.Post, new { @id = "frmselfinitiated", @onsubmit = "saveappendcontent()" }.ToHtmlAttributes()))
+        {
+            using (var s = f.BeginSection("Student-Initiated Project Proposal", null))
+            {
+                <p>* The following fields are mandatory</p>
+                @Html.ValidationMessage("")
+                @Html.HiddenFor(m => m.Id)
+                @s.FieldFor(m => Model.Title).Cols(60).Rows(1).AutoFocus().TabIndex(1)
+                @s.FieldFor(m => Model.ProjectOverview).Cols(100).Rows(5).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.ProjectOverview.GetDisplayName())
+                @s.FieldFor(m => Model.IntroBackground).Cols(100).Rows(5).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.IntroBackground.GetDisplayName())
+                @s.FieldFor(m => Model.KeyInnovationAndResearchGoals).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.KeyInnovationAndResearchGoals.GetDisplayName())
+                @s.FieldFor(m => Model.ComparisonOfTheMerits).Cols(100).Rows(3).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.ComparisonOfTheMerits.GetDisplayName())
+                @s.FieldFor(m => Model.TargetAudience).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.TargetAudience.GetDisplayName())
+                @s.FieldFor(m => Model.BusinessModelAndMarketPotential).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.BusinessModelAndMarketPotential.GetDisplayName())
+                @s.FieldFor(m => Model.MainFunction).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.MainFunctionsAndDeliverables.GetDisplayName())
+                @s.FieldFor(m => Model.ProjectPlan).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.ProjectPlan.GetDisplayName())
+                @s.FieldFor(m => Model.HardwareAndSoftwareRequirements).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.HardwareAndSoftwareRequirements.GetDisplayName())
+                @s.FieldFor(m => Model.ProblemsAndCountermeasures).Cols(100).Rows(5).AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.ProblemsAndCountermeasures.GetDisplayName())
+                @Html.HiddenFor(m => Model.displayFields)
+                @Html.HiddenFor(m => Model.removeIds)
+                if (Model.displayFieldsModel != null)
+                {
+                    foreach (WebApp.ViewModels.InitiatedProject.Field field in Model.displayFieldsModel)
+                    {
+                        <button class="remove"></button>
+                        <a href="#" class="editable" data-type="text" data-id="@field.id">@field.label</a>
+                        <textarea class="fieldValue" tabindex="1" autofocus="autofocus" data-val="true">@field.value</textarea>
+                    }
+
+                }
+            }
+
+            <div id="custom-content"></div>
+            <button id="add-field" value="1">Add Custom Field</button>
+            using (var n = f.BeginNavigation())
+            {
+                <button name="SaveCommand" value="1">Save</button>
+                @n.Submit("Submit", "Submit")
+            }
+        }
+    </div>
+}
+else
+{
+    <p>You need to create or join a group to submit a project proposal</p>
+}
+

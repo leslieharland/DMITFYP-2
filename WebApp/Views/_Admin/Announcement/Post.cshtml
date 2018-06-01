@@ -1,0 +1,94 @@
+﻿@using WebApp.Models
+@using System.Collections.Generic
+@{
+    var announcement = Model;
+}
+<style>
+    .resize-small {
+        max-width: 150px;
+    }
+</style>
+<!-- /.row -->
+<div class="boxed push-down-45" style="width: 650px;">
+    <div id="post-@announcement.announcement_id">
+        <div class="col-md-12">
+            <div class="panel-default">
+                <div class="pull-right">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu pull-right" role="menu">
+                            <li>
+                                <a onclick="editPost('@announcement.announcement_id')">Edit</a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a onclick="removeAnnouncement('@announcement.announcement_id')">Delete</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <!-- /.panel-heading -->
+                    <div class="post-heading">
+                        @announcement.title
+                    </div>
+                    <!-- /.panel-body -->
+                    <div class="post-body" style="min-height: 300px; border-bottom: 1px solid #efefef;">
+                        @announcement.message
+                        <div></div>
+                        <br />
+                        Attached File(s):<br />
+                        @if (announcement.filesDisplay != null)
+                        {
+                            if (announcement.filesDisplay.Count == 0)
+                            {
+                                <span>No files attached.</span><br />
+                            }
+
+                            foreach (var f in announcement.filesDisplay)
+                            {
+                                if ((new[] { "png", "jpg", "jpeg" }).ToList().Contains(f.extension))
+                                {
+                                    var url = (string)Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id);
+                                    <div id="@(f.file_resource_id)fileResource" onmouseover="$($(this).children()[1]).removeClass('hidden'); $(this).css('backgroundColor', 'silver');" onmouseout="$($(this).children()[1]).addClass('hidden'); $(this).css('backgroundColor', 'white');">
+                                        <img src="@Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id)" class="resize-small" />
+                                        <span class="glyphicon glyphicon-remove pull-right hidden" style="cursor:pointer" onclick="deleteFileResource($(this).parent().attr('id').split('fileResource')[0], $(this).parent())"></span>
+                                    </div>
+                                }
+                                else if ((new[] { "doc", "docx", "xls", "xlsx", "ppt", "pptx" }).ToList().Contains(f.extension))
+                                {
+                                    <div id="@(f.file_resource_id)fileResource" onmouseover="$($(this).children()[2]).removeClass('hidden'); $(this).css('backgroundColor', 'silver');" onmouseout="$($(this).children()[2]).addClass('hidden'); $(this).css('backgroundColor', 'white');">
+                                        <a href="@Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id)">@(f.name).@(f.extension)</a>
+                                        <span style="font-size:10px"><b>@(WebApp.DAL.UploadService.GetFileSize(f.data.Length))</b></span>
+                                        <span class="glyphicon glyphicon-remove pull-right hidden" style="cursor:pointer" onclick="deleteFileResource($(this).parent().attr('id').split('fileResource')[0], $(this).parent())"></span>
+                                    </div>
+                                }
+                                else if ((new[] { "mp4", "wmv" }).ToList().Contains(f.extension))
+                                {
+                                    <div id="@(f.file_resource_id)fileResource" onmouseover="$($(this).children()[1]).removeClass('hidden'); $(this).css('backgroundColor', 'silver');" onmouseout="$($(this).children()[1]).addClass('hidden'); $(this).css('backgroundColor', 'white');">
+                                        <video width="320" height="240" controls>
+                                            <source src="@Url.Content("~/Announcement/FileRequest?id=" + f.file_resource_id)" type="video/mp4">
+                                        </video>
+                                    </div>
+                                }
+                            }
+                            <button type="button" class="button btn-success" style="clear: both;" onclick="addNewFile()">Add file(s)</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+   <script>
+       function addNewFile() {
+           /* Pass to modal */
+           $('#announcementIdHiddenField').val(@announcement.announcement_id);
+           $('#addFilesModal').modal();
+
+
+           $('.modal-body').find('.dropzone > .dz-preview').remove();
+       }
+    </script>

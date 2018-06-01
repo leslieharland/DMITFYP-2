@@ -1,0 +1,103 @@
+﻿<script type="text/javascript">
+    function updatePendingGroupJoiningRequestBadge() {
+        $("#pendingGroupJoiningRequestsBadge").text(parseInt($("#pendingGroupJoiningRequestsBadge").text()) - 1);
+        if ($("#pendingGroupJoiningRequestsBadge").text() == "0") {
+            $("#pendingGroupJoiningRequestsBadge").parent().fadeOut("slow");
+        }
+    }
+    $("document").ready(function () {
+        $("#respondedGroupJoiningRequestsButton").click(function () {
+            $("#respondedGroupJoiningRequestsDiv").slideToggle();
+        });
+
+        $(".notedButton").click(function () {
+            var notedButton = $(this);
+            var notedButtonParent = $(this).parent();
+
+            if (!(notedButtonParent.text().indexOf("Please note that all your other group joining request(s) has been automatically rejected.") > -1)) {
+                $.ajax({
+                    url: "/GroupJoiningRequest/IndicateNotificationOfGroupJoiningRequestStatus",
+                    data: {
+                        groupJoiningRequestId: notedButtonParent.attr("id").split("groupJoiningRequest")[0]
+                    },
+                    dataType: "json",
+                    type: "GET",
+                    error: function (xhr, status, error) {
+                        alertify.notify("Sorry, HTTP " + xhr.status + " " + xhr.statusText + " error has occured, please contact your system administrator for assistance.", "error", function () { });
+                    },
+                    success: function (result, status, xhr) {
+                        if (result.rowsAffected > 0 && result.error == undefined) {
+                            notedButtonParent.fadeOut("slow");
+                            updatePendingGroupJoiningRequestBadge();
+                        } else {
+                            alertify.notify("Sorry, an error has occured, please contact your system administrator for assistance, if neccesary.", "error", function () { });
+                        }
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: "/GroupJoiningRequest/IndicateNotificationOfAllGroupJoiningRequestStatus",
+                    data: {
+                        studentId: $("#studentIdHiddenField").val()
+                    },
+                    dataType: "json",
+                    type: "GET",
+                    error: function (xhr, status, error) {
+                        alertify.notify("Sorry, HTTP " + xhr.status + " " + xhr.statusText + " error has occured, please contact your system administrator for assistance.", "error", function () { });
+                    },
+                    success: function (result, status, xhr) {
+                        if (result.rowsAffected > 0 && result.error == undefined) {
+                            notedButtonParent.fadeOut("slow");
+                            updatePendingGroupJoiningRequestBadge();
+                        } else {
+                            alertify.notify("Sorry, an error has occured, please contact your system administrator for assistance, if neccesary.", "error", function () { });
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>
+@{
+    bool containsAcceptedGroupJoiningRequest = false;
+    if (((List<dynamic>)ViewData["GroupJoiningRequests"]).Count == 0)
+    {
+        return;
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <button class="btn btn-success" type="button" id="respondedGroupJoiningRequestsButton" style="margin-bottom:10px">
+            Pending Group Joining Request(s) <span class="badge" id="pendingGroupJoiningRequestsBadge">@(((List<dynamic>)ViewData["GroupJoiningRequests"]).Count)</span>
+        </button>
+        <div id="respondedGroupJoiningRequestsDiv" style="display:none; margin-top:10px">
+            @{
+                <input type="hidden" value="@(((List<dynamic>)ViewData["GroupJoiningRequests"])[0].student_id)" id="studentIdHiddenField" />
+                foreach (var groupJoiningRequest in (List<dynamic>)ViewData["GroupJoiningRequests"])
+                {
+                    if (groupJoiningRequest.request_acceptance_date != new DateTime(1970, 1, 1))
+                    {
+                        containsAcceptedGroupJoiningRequest = true;
+                        <div class="alert alert-info" role="alert" id="@(groupJoiningRequest.group_joining_request_id)groupJoiningRequest">
+                            Group @(groupJoiningRequest.group_number)'s leader has <strong><b>accepted</b></strong> your group joining request. Please note that all your other group joining request(s) has been automatically rejected.
+                            <button style="margin-left:15px" type="button" class="btn btn-default notedButton">Noted</button>
+                        </div>
+                        <script>$("#pendingGroupJoiningRequestsBadge").text("1")</script>
+                        break;
+                    }
+                }
+
+                if (!containsAcceptedGroupJoiningRequest)
+                {
+                    foreach (var groupJoiningRequest in (List<dynamic>)ViewData["GroupJoiningRequests"])
+                    {
+                        <div class="alert alert-info" role="alert" id="@(groupJoiningRequest.group_joining_request_id)groupJoiningRequest">
+                            Group @(groupJoiningRequest.group_number)'s leader has <strong><b>rejected</b></strong> your group joining request.
+                            <button style="margin-left:15px" type="button" class="btn btn-default notedButton">Noted</button>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</div>

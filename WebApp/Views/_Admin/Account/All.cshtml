@@ -1,0 +1,285 @@
+﻿@model WebApp.ViewModels.StudentViewStudentsViewModel
+
+@{
+    ViewBag.Title = "ViewStudents";
+}
+<div class="container">
+    <script>
+        function AJAXDeleteStudent() {
+            var alertClass = getCurrentAlertClass();
+            $.ajax({
+                url: "Student/DeleteStudent",
+                data: {
+                    studentId: $('#studentIdHiddenField').val()
+                },
+                dataType: "json",
+                type: "GET",
+                error: function (xhr, status, error) {
+                    //configureAlertPaneMessageError(xhr, alertClass);
+                    $("#globalAlertPane").removeClass("hidden");
+                },
+                success: function (result, status, xhr) {
+                    //configureAlertPaneMessageSuccess(result, alertClass, "student", "deleted");
+                    // After performing all necessary "configurations" on the alert pane, show it.
+                    $("#globalAlertPane").removeClass("hidden");
+
+                    $("#partialFullName").val("");
+                    $("option[value='@WebApp.Models.Student.AdminNumberDatabaseColumnName']").attr("selected", "selected");
+                    $("option[value='@WebApp.Models.Constants.AscendingOrderSql']").attr("selected", "selected");
+                    refreshStudentTable(1, 1);
+                }
+            });
+        }
+
+        function wireViewStudentsEventHandlers() {
+            $(".numberedPaginationLink").click(function () {
+                refreshStudentTable($(this).attr("id"), $(this).text());
+            });
+
+            $(".deleteStudentButton").click(function () {
+                $("#studentIdHiddenField").val((($(this).attr("id")).split("studentId"))[0]);
+                $("#confirmDeleteStudentModal").modal();
+            });
+        }
+
+        function getPaginationLinkNumberOfPreviouslySelectedPaginationLink() {
+            var a;
+            $.each($(".numberedPaginationLink"), function (index, value) {
+                var classList = $(value).parent().attr("class").split(/\s+/);
+                for (var i = 0; i < classList.length; ++i) {
+                    if (classList[i] == "active") a = (index + 1);
+                }
+            });
+            return a;
+        }
+
+        function refreshPaginationLinks(paginationLinkNumber) {
+            $.each($(".numberedPaginationLink"), function (index, value) {
+                if ($(value).text() == paginationLinkNumber) {
+                    $(value).parent().addClass("active");
+                } else {
+                    $(value).parent().removeClass("active");
+                }
+            })
+
+            if (paginationLinkNumber == 1) {
+                // if it is the first pagination link
+                // disable the "<<" pagination link
+                $(".pagination li:first-child").addClass("disabled");
+                // enable the ">>" pagination link
+                $(".pagination li:last-child").removeClass("disabled");
+            } else {
+                if (($(".numberedPaginationLink:last").text()) == paginationLinkNumber) {
+                    // if it is the last pagination link
+                    // enable the "<<" pagination link
+                    $(".pagination li:first-child").removeClass("disabled");
+                    // disable the ">>" pagination link
+                    $(".pagination li:last-child").addClass("disabled");
+                } else {
+                    // else if it is not the first or last pagination link
+                    // enable both the "<<" and ">>" pagination links
+                    $(".pagination li:first-child").removeClass("disabled");
+                    $(".pagination li:last-child").removeClass("disabled");
+                }
+            }
+        }
+
+        function refreshStudentTable(recordIndex, activePaginationLinkNumber) {
+            var viewModel = {
+                partialFullName: $("#partialFullName").val(),
+                startIndex: recordIndex,
+                sortingOrder: $("#sortingOrders").val(),
+                databaseColumnToSortBy: $("#databaseColumns").val(),
+                students: null,
+                databaseColumns: null,
+                sortingOrders: null
+            }
+
+            $.ajax({
+                url: "Student/ViewStudents",
+                data: viewModel,
+                dataType: "json",
+                type: "GET",
+                error: function (xhr, status, error) {
+                    $("#studentTable tbody").html("");
+                    $("tbody").append("<tr><td colspan='5'>Sorry, no students are shown as a HTTP " + xhr.status + " " + xhr.statusText + " error has occured. Please contact your system administrator for assistance.</td></tr>");
+                },
+                success: function (result, status, xhr) {
+                    if (result.error != undefined) {
+                        $("#studentTable tbody").html("");
+                        $("#studentTable tbody").append("<tr><td colspan='5'>Sorry, no students are shown as the following error occured; " + result.error + " Please contact your system administrator for assistance.</td></tr>");
+                        return;
+                    }
+
+                    $("#studentTable tbody").html("");
+                    for (var a = 0; a < result.students.length; ++a) {
+                        var row = $("<tr>");
+                        row.append("<td>" + result.students[a].admin_number + "</td>");
+                        row.append("<td>" + result.students[a].full_name + "</td>");
+                        row.append("<td>" + result.students[a].mobile_number + "</td>");
+                        row.append("<td>" + result.students[a].email_address + "</td>");
+                        row.append("<td><button type='button' class='btn btn-success deleteStudentButton' id='" + result.students[a].student_id + "studentId'>Delete</button></td>");
+                        $("#studentTable tbody").append(row);
+                    }
+
+                    $.each($(".numberedPaginationLink"), function (index, value) {
+                        $(value).parent().remove();
+                    });
+
+                    for (var b = 0; b < result.numberOfPages; ++b) {
+                        $(".pagination li:last-child").before("<li class=''><a href='#' id='" + ((b * parseInt(@(WebApp.Models.Constants.PaginationPageSize))) + 1) + "' class='numberedPaginationLink'>" + (b + 1) + "</a></li>");
+                    }
+
+                    refreshPaginationLinks(activePaginationLinkNumber);
+                    wireViewStudentsEventHandlers();
+                }
+            });
+        }
+
+        $("document").ready(function () {
+            /*
+             * Adding in the aria-describedby attribute to text field elements with the ASP.NET MVC Razor C# language is impossible.
+             * Typically, using Razor C#, the declaration of a text field would be as such; @@TextBoxFor(x => x.partialFullName, new {@@class="form-control}).
+             * (When seeing a pair of "at" symbols, please ignore one of which (in the pair), as that "at" symbol's role is merely to escape the other
+             * "at" symbol in the pair) As can be seen, attributes of the HTML text field such as the class attribute, are added as properties of a C# object. Thus,
+             * should the aria-described attribute be added as a HTML text field attribute, it would have to be likewise added as a property of a C# object. The code above would
+             * thus look as such; @@TextBoxFor(x => x.partialFullName, new {@@class="form-control", aria-describedby="partialFullNameErrorMessage"}). At a glance the following code
+             * might look syntactically correct. However, it is not. This is because the aria-describedby, having a dash does not qualify as a valid C# object property
+             * name.
+             */
+
+            /* Since adding the aria-describedby attribute to the text field elements is not possible through Razor C# syntax, as elaborated previously,
+             * the Javascript code below accomplishes that job instead.
+             */
+            $("#partialFullName").attr("aria-describedby", "partialFullNameErrorMessage");
+
+            $("#databaseColumns").change(function () {
+                refreshStudentTable(1, 1);
+            });
+
+            $("#sortingOrders").change(function () {
+                refreshStudentTable(1, 1);
+            });
+
+            $("#partialFullName").on("input", function () {
+                if (($(this).val()).match("^([A-Za-z]+){1}( [A-Za-z]+)*$") || ($(this).val()).length == 0) {
+                    $(this).parent().removeClass("has-error");
+                    $(($(this).parent()).children()[2]).addClass("hidden");
+                    refreshStudentTable(1, 1);
+                } else {
+                    // If invalid characters are detected in the full name, conserve server resources by not sending the invalid full name over to the database.
+                    $(this).parent().addClass("has-error");
+                    $(($(this).parent()).children()[2]).removeClass("hidden");
+                }
+            });
+
+            $(".arrowPaginationLink").click(function () {
+                var b;
+                if ($(this).attr("aria-label") == "Next") {
+                    b = getPaginationLinkNumberOfPreviouslySelectedPaginationLink() + 1;
+                } else {
+                    b = getPaginationLinkNumberOfPreviouslySelectedPaginationLink() - 1;
+                }
+
+                refreshStudentTable((((b - 1) * parseInt(@(WebApp.Models.Constants.PaginationPageSize))) + 1), b);
+
+            });
+
+            wireViewStudentsEventHandlers();
+        });
+    </script>
+    <h3>View Students</h3>
+    @{
+        string errorMessage = (string)ViewData["error"]; // Type narrowing through casting performed here.
+        if (errorMessage != null)
+        {
+            <div class="jumbotron" style="width:auto"><h4>Sorry, no students are shown as the following error occured; @(errorMessage) Please contact your system adminsitrator for assistance.</h4></div>
+
+            // Don't render the rest of the page given the error.
+            return;
+        }
+    }
+    <div class="form-inline">
+        <div class="form-group">
+            <label for="partialFullName">Full Name Filter:</label>
+            @Html.TextBoxFor(x => x.partialFullName, new { @class = "form-control" })
+            <span id="partialFullNameErrorMessage" class="help-block hidden">Invalid characters in partial full name.</span>
+        </div>
+        <div class="form-group">
+            <label for="databaseColumns">Column to Sort By:</label>
+            @Html.DropDownListFor(x => x.databaseColumns, Model.databaseColumns, new { @class = "form-control" })
+        </div>
+        <div class="form-group">
+            <label for="sortingOrders">Sorting Order:</label>
+            @Html.DropDownListFor(x => x.sortingOrders, Model.sortingOrders, new { @class = "form-control" })
+        </div>
+    </div>
+    <table class="table table-bordered table-hover" style="margin-top:10px; width:auto; margin-bottom:0px" id="studentTable">
+        <thead>
+            <tr>
+                <th>Admission Number</th>
+                <th>Student Name</th>
+                <th>Mobile Number</th>
+                <th>Email Address</th>
+                <th>Delete Student</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                foreach (var student in Model.students)
+                {
+                    <tr>
+                        <td>@student.admin_number</td>
+                        <td>@student.full_name</td>
+                        <td>@student.mobile_number</td>
+                        <td>@student.email_address</td>
+                        <td><button type="button" class="btn btn-success deleteStudentButton" id="@(student.student_id)studentId">Delete</button></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <nav>
+        <ul class="pagination">
+            <li class="disabled">
+                <a href="#" aria-label="Previous" class="arrowPaginationLink">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @{
+                var totalNumberOfPages = (int)ViewData["totalNumberOfPages"]; // Type narrowing through casting performed here.
+                for (int i = 0; i < totalNumberOfPages; ++i)
+                {
+                    <li class="@(i == 0 ? " active" : "")">
+                        <a href="#" id="@((i*WebApp.Models.Constants.PaginationPageSize)+ 1)" class="numberedPaginationLink">@(i + 1)</a>
+                    </li>
+                }
+            }
+            <li>
+                <a href="#" aria-label="Next" class="arrowPaginationLink">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="modal fade" id="confirmDeleteStudentModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete Student</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="studentIdHiddenField" />
+                    <p>Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal" onclick="AJAXDeleteStudent()">Yes</button>
+                    <button type="button" class="btn btn-success" data-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

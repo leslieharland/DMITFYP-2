@@ -1,0 +1,361 @@
+﻿<div class="p-container">
+    @*@using MvcFileUploader.HtmlHelper*@
+
+
+     <script src="~/js/jquery/jquery.min.js"></script>
+      <script src="~/js/dropzone.js"></script>
+        <script type="text/javascript">// Immediately after the js include
+Dropzone.autoDiscover = false;</script>   
+    <link href="~/css/basic.css" rel="stylesheet" />
+    <link href="~/css/dropzone.css" rel="stylesheet" />
+    <script>
+        function no_submit() {
+            return false;
+        }
+
+        $("document").ready(function () {
+        myDropzoneVar = new Dropzone("#announcementFileUploadDropzoneDiv", {
+             url: "Announcement/UploadFile",
+                acceptedFiles: ".jpeg,.jpg,.png,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.rar,.zip,.mp3,.avi,.mov,.mp4,.mpeg2",
+                init: function () {
+                    this.on("dragenter", function () {
+                        $("#announcementFileUploadDropzoneDiv").css("borderStyle", "solid");
+                    });
+
+                    this.on("drageleave", function () {
+                        $("#announcementFileUploadDropzoneDiv").css("borderStyle", "dotted");
+                    });
+
+                    this.on("dragover", function () {
+                        $("#announcementFileUploadDropzoneDiv").css("borderStyle", "solid");
+                    });
+
+
+                    var myDropzone = this;
+                    myDropzone.on("success", function(files,response) {
+                        myDropzoneVar.destroy();
+                    }
+                }
+            });
+        });
+    </script>
+    <style>
+    .post-content > input[type="text"] {
+        width: 95%;
+        margin: 10px 0;
+    }
+
+    .post-button {
+        width: 50px;
+    }
+
+    .input-state-error {
+        color: #c85305;
+        font-size: 95%;
+        position: relative;
+        vertical-align: bottom;
+        display: block;
+    }
+
+ </style>
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Announcement(s)</h3>
+            <form id="post-form" data-role="validator" data-on-before-submit="no_submit" data-hint-mode="line" class="boxed" style="        min-height: 140px !important;
+        width: 100%;
+        max-width: 650px;">
+                <div class="post-heading" style="        border: 1px solid rgb(204, 204, 204) !important;
+        padding: 4px;">
+                    <div class="large-12">
+                        <input id="post-title" type="text" style="        border: none !important;
+        outline: none !important;" placeholder="Title" />
+                    </div>
+                </div>
+                <div class="post-body" style="        margin-top: -18px;">
+                    <div class="input-control">
+                        <textarea id="post-message" style="        height: 70px;
+        resize: none;" data-validate-func="required"
+                                  data-validate-hint="Write something to post an announcement."
+                                  data-validate-hint-position="top"></textarea>
+                    </div>
+                </div>
+            </form>
+            @*<div class="post-actions">
+                @(
+ Html.MvcFileUpload()
+            .UploadAt(Url.Action("UploadFile", "Announcement"))
+            .WithFileTypes(@"/(\.|\/)(jpe?g|png|pdf|doc|docx|ppt|pptx|xls|xlsx|csv|rar|zip|mp3|avi|mov|mp4|mpeg2|)$/i")
+            .RenderInline("UploadExt")
+                )*@
+            </div>
+        </div>
+    </div>
+
+    <div id="posts-container"></div>
+    <script type="text/javascript">
+        var count = 1;
+        var last;
+        var appendItems = function (callback) {
+            if (!$('#posts-container').find('div #loader').length > 0) {
+                var loader = $('<div id="loader"><img id="progress" src="images/ajax-loader.gif" /></div>');
+                $(loader).load(function () { $(this).resizable(); }).appendTo("#posts-container");
+            }
+
+            loader.find("img").width("16px").height("11px");
+
+
+            $('#posts-container .row').css({ opacity: 0.8 });
+            $.get('/Announcement/Get?page=' + count, function (data) {
+                $("#posts-container").css({ opacity: 1 }).append(data);
+                if (data != "") {
+                    $('#posts-container').find('#loader > img#progress').remove();
+                }
+                count++;
+                if (data == "last")
+                    last = true;
+            });
+            if (typeof callback === "function") {
+                callback();
+            }
+        }
+
+        if (last != true) {
+            appendItems(function () {
+                $.onInfiniteScroll(appendItems);
+            });
+        }
+
+        function deletePost(id) {
+            $.post('/Announcement/Remove/' + id,
+                    function (data) {
+                        if (data == true) {
+                            $('#post-' + id).closest('.boxed').fadeOut('slow');
+                        } else {
+                            alert('error');
+                        }
+                    });
+
+        }
+
+        function editPost(id) {
+            var contentDiv = $('#post-' + id);
+            $.ajax({
+                cache: false,
+                url: '/Announcement/GetEditForm/' + id,
+                type: "POST",
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'html',
+                success: function (result) {
+                    $('#posts-container').find(contentDiv).replaceWith(result);
+                },
+                error: function (req, status, error) {
+                    alert(error);
+                }
+            });
+        }
+
+        function getUpdatedAnnouncement(id) {
+            var contentDiv = $('#post-' + id);
+            var i = $("div").index(contentDiv);
+            $.ajax({
+                cache: false,
+                url: '/Announcement/GetUpdatedPost/' + id,
+                type: "POST",
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'html',
+                success: function (result) {
+                    $('#posts-container').find(contentDiv).closest('.boxed').replaceWith(result);
+                },
+                error: function (req, status, error) {
+                    alert(error);
+                }
+            });
+
+        }
+        function postAnnouncement() {
+            var announcement = {
+                title: "" + $.trim($('#post-title').val()) + "",
+                message: "" + $.trim($('#post-message').val()) + ""
+            };
+
+            $.ajax({
+                cache: false,
+                url: '@Url.Action("Post", "Announcement")',
+                type: "POST",
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'html',
+                data: JSON.stringify(announcement),
+                success: function (result) {
+                    $('#posts-container').prepend(result);
+                },
+                error: function (req, status, error) {
+                    alert(error);
+                }
+            });
+
+            $('#post-title').val('');
+            $('#post-message').val('');
+            $('#post-message').css("border-color", "#ccc").show('slow');
+            $('tbody.files').empty().fadeOut();
+        }
+
+        function removeAnnouncement(id) {
+            var closable = alertify.dialog('confirm').setting('closable');
+            alertify.dialog('confirm')
+               .set({
+                   'title': 'Delete Post',
+                   'message': 'Are you sure you want to delete this?',
+                   'onok': function () { deletePost(id); }
+               }).show();
+        }
+
+        function checkPostValid() {
+            if ($('#post-message').val().length != 0 && $("#post-title").val().length != 0) {
+                var a = $("#post-title").val();
+                if ($("#post-title").val().match("<.*>.*<\/{0,1}.*>")) {
+                    alert("Sorry, tags are not allowed in the announcement title.");
+                    return;
+                }
+                postAnnouncement();
+            }
+            else {
+                alert("The announcement title/ message must be filled up.");
+            }
+        }
+
+        function validatePost() {
+            var form = $('#post-edit-form');
+            var titleEditDiv = $('#post-edit-form').find('.post-edit-title');
+            var messageEditDiv = $('#post-edit-form').find('.post-edit-content');
+            var title = titleEditDiv.val();
+            var message = messageEditDiv.val();
+            var id = $('#post-id-edit').val();
+            $('.input-state-error').remove();
+            if (title == "") {
+                if (!$('.title-error').length) {
+                    $('<span class="input-state-error title-error">No title</span>').insertAfter(titleEditDiv);
+                }
+            }
+            if (message == "") {
+                if (!$('.message-error').length) {
+                    $('<span class="input-state-error message-error">You must specify a message</span>').insertAfter(messageEditDiv);
+                }
+            }
+
+            if (!$('.input-state-error').length) {
+                updateAnnouncement(id, title, message);
+                //$(form).submit();
+            }
+
+        }
+
+        function updateAnnouncement(id, title, message) {
+            var contentDiv = $('#post-' + id).closest('div.boxed');
+            var announcement = {
+                announcement_id: id,
+                title: title,
+                message: message
+            };
+
+            $.ajax({
+                cache: false,
+                url: '@Url.Action("Edit", "Announcement")',
+                type: "POST",
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'html',
+                data: JSON.stringify(announcement),
+                success: function (result) {
+                    $('#posts-container').find(contentDiv).replaceWith(result);
+                },
+                error: function (req, status, error) {
+                    alert(error);
+                }
+            });
+        }
+
+        function deleteFileResource(inFileResourceId, containerElement) {
+            var alertifyConfirmDialog = alertify.dialog("confirm").setting("closable");
+            alertify.dialog("confirm").set({
+                title: "Delete File Resource",
+                message: "Are you sure about deleting this?",
+                "onok": function () {
+                    $.ajax({
+                        url: "Announcement/DeleteFileResource",
+                        type: "GET",
+                        data: {
+                            fileResourceId: inFileResourceId
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.error == undefined) {
+                                $(containerElement).fadeOut("slow");
+                                return;
+                            }
+                            alert("Error deleting the specified file resource, because; " + data.error + ".");
+                        },
+                        error: function (req, status, error) {
+                            alert(error);
+                        }
+                    });
+                }
+            }).show();
+        }
+
+        function addFiles() {
+            $.ajax({
+                url: "Announcement/AddFileResources",
+                type: "GET",
+                data: {
+                    announcementId: $("#announcementIdHiddenField").val()
+                },
+                dataType: "html",
+                success: function (result) {
+                    $("#post-" + $("#announcementIdHiddenField").val()).parent().replaceWith(result);
+                },
+                error: function (request, status, error) {
+                    alert(error);
+                }
+            });
+        }
+
+        function cancelAddFiles() {
+            $.ajax({
+                url: "Announcement/DeleteUploadedFiles",
+                type: "GET",
+                success: function () {
+                    $("#announcementFileUploadDropzoneDiv").html("<div class='dz-message'><p style='color:blue'><strong>Drop files here OR click here, to upload file(s).</strong></p></div>");
+                    $("#announcementFileUploadDropzoneDiv").css({ cursor: "pointer", width: "500px", borderStyle: "dotted", borderColor: "blue" });
+                    $("#announcementFileUploadDropzoneDiv").attr("class", "dropzone");
+                }
+            });
+        }
+
+    </script>
+    <div class="modal fade" id="addFilesModal" tabindex="-1" role="dialog" aria-labelledby="addFilesModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="addFilesModalLabel">File(s) to Add</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="announcementIdHiddenField"/>
+                    <div class="dropzone" style="        cursor: pointer;
+        width: 500px;
+        border-style: dotted;
+        border-color: blue" id="announcementFileUploadDropzoneDiv">
+                        <div class="dz-message">
+                            <p style="        color: blue"><strong>Drop files here OR click here, to upload file(s).</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal" onclick="addFiles()">Add</button>
+                    <button type="button" class="btn btn-success" data-dismiss="modal" onclick="cancelAddFiles()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

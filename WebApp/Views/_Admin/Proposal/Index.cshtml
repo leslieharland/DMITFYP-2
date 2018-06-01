@@ -1,0 +1,115 @@
+﻿@using WebApp.ViewModels.Proposal
+@using WebApp.Infrastructure.AspNet
+@model IEnumerable<ProposalViewModel>
+<style>
+    #mytable > tbody > tr {
+        word-break: break-all;
+    }
+
+    #mytable > thead > tr > th {
+        background: #fff;
+    }
+
+    colgroup col.info {
+        background-color: #d9edf7;
+    }
+
+    .ic-right {
+        float: right;
+        display: none;
+        color: #999999;
+    }
+
+    .clicktoview{
+        text-decoration: none !important;
+        display: block;
+    }
+</style>
+<div style="width: 80%;" class="boxed push-down-45">
+    <div style="padding-bottom: 17px; margin-top: 30px;">
+
+        <div id="p-actions-ptable" style="float: right;">
+            <button class="btn-no-border btn-default RemoveLink" id="p-append-data" style="float: left; margin-right: 6px;" onclick="window.location.href='@Url.Action("Create", "Proposal")'">
+                <i class="glyphicon glyphicon-plus" style="margin-right: 4px;"></i><strong>Add</strong>
+            </button>
+            <button class="btn-no-border btn-default AddLink" id="p-remove-data" data-method="remove" data-url='@Url.Content("~/Proposal/Remove")' style="float: left;">
+                <i class="glyphicon glyphicon-trash" style="margin-right: 4px;"></i><strong>Delete</strong>
+            </button>
+        </div>
+        <div class="table-responsive" style="width: 100%;">
+            <table id="mytable" class="table table-hover">
+                <colgroup>
+                    <col />
+                    <col span="1" class="info" />
+                </colgroup>
+                <thead>
+                <th width="50"><input type="checkbox" id="checkall" /></th>
+                <th class="hidden">Id</th>
+                <th>Title</th>
+                <th width="150">Availability</th>
+                </thead>
+
+                <tbody>
+                    @foreach (ProposalViewModel p in Model)
+                    {
+                        <tr onmouseover="$('#ic-right-@p.Id').css('display', 'block');" onmouseout="$('#ic-right-@p.Id').css('display', 'none');">
+                            <td><input type="checkbox" class="checkthis" data-id="@p.Id" /></td>
+                            <td class="hidden">@p.Id</td>
+                            <td><a title="view" data-id="@p.Id" data-last="@ViewBag.UserIndex" class="view ml10 clicktoview" href="javascript:void(0)"><span onclick="location.href = $(this).closest('a').attr('href')" style="cursor: pointer !important;">@p.Title</span><i class="ic-right glyphicon glyphicon-arrow-right" id="ic-right-@p.Id"></i></a></td>
+                            <td>
+                                @if (p.Availability)
+                                {
+                                    <i class="glyphicon glyphicon-ok"></i>
+                                }
+                                else
+                                {
+                                    <i class="glyphicon glyphicon-time"></i>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    var ViewLinkObj;
+    $(function(){
+        $("#mytable #checkall").click(function () {
+            if ($("#mytable #checkall").is(':checked')) {
+                $("#mytable input[type=checkbox]").each(function () {
+                    $(this).prop("checked", true);
+                });
+
+            } else {
+                $("#mytable input[type=checkbox]").each(function () {
+                    $(this).prop("checked", false);
+                });
+            }
+        });
+
+    });
+
+    $(".clicktoview").click(function () {
+        ViewLinkObj = $(this);
+        location.href = "/proposal/details/" + ViewLinkObj[0].getAttribute("data-id");
+        return false;
+    });
+
+
+    $('#p-remove-data').click(function () {
+        var selectedVals = new Array();
+        $('#mytable > tbody').find('input[type="checkbox"]:checked').each(function () {
+            selectedVals.push($(this)[0].getAttribute("data-id"));
+            $(this).closest('tr').remove().fadeOut('slow');
+        });
+
+        $.ajax({
+            url: '/proposal/delete',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ ids: selectedVals })
+        });
+    });
+</script>

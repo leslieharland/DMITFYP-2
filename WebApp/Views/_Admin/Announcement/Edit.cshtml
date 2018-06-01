@@ -1,0 +1,45 @@
+﻿@using WebApp.Models
+@using System.Collections.Generic
+@{
+    var announcement = Model;
+}
+<style>
+    .resize-small {
+        max-width: 150px;
+    }
+</style>
+<!-- /.row -->
+<form id="post-edit-form">
+    <div id="post-@announcement.announcement_id">
+        <div class="col-md-12">
+            <div class="panel-default">
+                <div class="pull-right">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu pull-right" role="menu">
+                            <li>
+                                <a onclick="editPost('@announcement.announcement_id')">Edit</a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a onclick="removeAnnouncement('@announcement.announcement_id')">Delete</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <!-- /.panel-heading -->
+                    <input type="text" class="post-edit-title" value="@announcement.title" />
+                    <!-- /.panel-body -->
+                    <textarea rows="5" class="post-edit-content" cols="20">@announcement.message</textarea>
+                    <input type="button" id="post-edit-save-btn" class="post-button" value="Save" onclick="validatePost(this);" />
+                    &nbsp;
+                    <input type="button" id="post-edit-cancel-btn" value="Cancel" onclick="getUpdatedAnnouncement(@announcement.announcement_id)" />
+                    <input type="hidden" id="post-id-edit" value="@announcement.announcement_id" />
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

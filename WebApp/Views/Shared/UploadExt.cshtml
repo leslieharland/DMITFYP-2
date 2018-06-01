@@ -1,0 +1,109 @@
+﻿@using System.Globalization
+@using MvcFileUploader.Models
+@model MvcFileUploader.Models.FileUploadViewModel
+@{
+    var formId = "fileupload" + Guid.NewGuid();
+
+    var maxNoOfFiles = Model.MaxNumberOfFiles.HasValue ? Model.MaxNumberOfFiles.Value.ToString(CultureInfo.InvariantCulture) : "undefined";
+}
+
+<form id="@formId" action="@Model.UploadUrl" method="POST" enctype="multipart/form-data" style="float: left; width: 100%;max-width: 650px;">
+    <a id="post-btn" onclick="$('#post-form').submit();checkPostValid(); " class="button" style="float: left; margin-right: 6px;">Post</a>
+    <span class="button secondary fileinput-button" style="float: left">
+        <i class="glyphicon glyphicon-paperclip"></i>
+        <span>Attach file</span>
+        @if (Model.MaxNumberOfFiles == 1)
+        {
+            <input type="file" name="files[]" id="imgUpload"/>
+        }
+        else
+        {
+            <input type="file" name="files[]" id="imgUpload" multiple />
+        }
+    </span>
+
+    <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+
+    <!-- Additional values to be posted with form-->
+    @foreach (var postItem in Model.PostValuesWithUpload)
+    {
+        @Html.Hidden(postItem.Key, postItem.Value)
+    }
+</form>
+
+<!--template and scripts-->
+@if (Model.RenderSharedScript)
+{
+
+       <!-- The template to display files available for upload -->
+    <script id="template-upload" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+        <tr class="template-upload fade">
+            <!-- Required implementation of tr-->
+        </tr>
+        {% } %}
+    </script>
+        <!-- The template to display files available for download -->
+        <script id="template-download" type="text/x-tmpl">
+            {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-download fade">
+                <td width="70">
+                    <span class="preview">
+                        <span></span>
+                        {% if (file.thumbnailUrl) { %}
+                           <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img height="48px" src="{%=file.thumbnailUrl%}"></a>
+                        {% } %}
+                    </span>
+                </td>
+                <td style="vertical-align: middle;">
+                    <p class="name">
+                        {% if (file.url) { %}
+                        <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" {%=file.thumbnailUrl?'data-gallery':''%}>{%=file.name%}</a>
+                        {% } else { %}
+                        <span>{%=file.name%}</span>
+                        {% } %}
+                    </p>
+                    {% if (file.error) { %}
+                    <div><span class="label label-danger">Error</span> {%=file.error%}</div>
+                    {% } %}
+                </td>
+                <td style="text-align: right;">
+                    {% if (file.deleteUrl) { %}
+                    <button class="btn btn-danger delete" style="background: none; color: #999999; border: none; outline: 0 none !important;" data-type="{%=file.deleteType%}" data-url="{%=file.deleteUrl%}" {% if (file.deletewithcredentials) { %} data-xhr-fields='{"withCredentials":true}' {% } %}>
+                        <i class="glyphicon glyphicon-remove"></i>
+                    </button>
+                    {% } else { %}
+                    <button class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle"></i>
+                        <span>Cancel</span>
+                    </button>
+                    {% } %}
+                </td>
+            </tr>
+            {% } %}
+        </script>
+}
+<script src="~/dist/jquery/uploader.js"></script>
+<link rel="stylesheet" href="~/dist/jquery/uploader.css" />
+
+<script type="text/javascript">
+
+    // Initialize the jQuery File Upload widget:
+    $('#@(formId)').fileupload({url: '@Model.UploadUrl'});
+
+    $('#@(formId)').fileupload('option', {
+        dropZone: $('#@(formId)'),
+        autoUpload: true,
+        maxFileSize: @Model.MaxFileSizeInBytes,
+        maxNumberOfFiles: @maxNoOfFiles,
+        disableImagePreview: @(Model.DisableImagePreview ? "true" : "false"),
+        resizeMaxWidth: 1920,
+        resizeMaxHeight: 1200,
+        acceptFileTypes: @Model.FileTypes,
+
+        });
+
+    $('#@(formId)').fileupload().bind('fileuploadprocessfail', function (e, data) {
+        alert(data.files[data.index].error);
+    });
+</script>

@@ -1,0 +1,85 @@
+﻿@using WebApp.ViewModels.Proposal
+@using WebApp.Infrastructure.AspNet
+@model IEnumerable<ProposalViewModel>
+<style>
+    #mytable > tbody > tr {
+        word-break: break-all;
+    }
+
+    #mytable > thead {
+        background: #fff;
+    }
+
+    colgroup col.info {
+        background-color: #d9edf7;
+    }
+
+    .ic-right {
+        float: right;
+        display: none;
+        color: #999999;
+    }
+
+    @@media (max-width: 768px) {
+        body {
+            padding: 0;
+        }
+
+        .boxed {
+            width: 100%;
+        }
+
+        .container-fluid {
+            padding: 0 !important;
+        }
+
+        .ic-right {
+            display: none;
+        }
+    }
+</style>
+<div class="boxed push-down-45">
+    <div class="table-responsive" style="width: 100%;">
+        <table id="mytable" class="table table-hover">
+            <colgroup>
+                <col span="1" class="info" />
+            </colgroup>
+            <thead>
+            <td class="hidden">Id</td>
+            <td>Title</td>
+            <td width="150">Status</td>
+            </thead>
+
+            <tbody data-link="row" class="rowlink">
+                @foreach (ProposalViewModel p in Model)
+                    {
+                    <tr onmouseover="$('#ic-right-@p.Id').css('display', 'block');" onmouseout="$('#ic-right-@p.Id').css('display', 'none');">
+                        <td class="hidden">@p.Id</td>
+                        <td><a title="view" class="view ml10" href="/proposal/details/@p.Id"><span>@p.Title</span><i class="ic-right glyphicon glyphicon-arrow-right" id="ic-right-@p.Id"></i></a></td>
+                        <td>
+                            @if (p.Availability)
+                            {
+                                <span>Approved</span>}
+                            else
+                            {
+                                if (p.SubmittedDate.HasValue)
+                                {
+                                <span>Waiting approval</span>
+                                }
+                                else
+                                {
+                                    <span>In Progress</span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @section Scripts{
+        <script src="~/Scripts/bootstrap-rowlink.js"></script>
+        <script>
+            $('tbody.rowlink').rowlink();
+        </script>
+    }

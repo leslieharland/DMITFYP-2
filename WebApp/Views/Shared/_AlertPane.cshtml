@@ -1,0 +1,9 @@
+﻿ <!-- since all .cshtml pages in the ~/Views folder "inherit" their layout from this layout file, they would also "inherit" this alert pane (as declared below) -->
+<!-- an alert pane is a useful Bootstrap component for alerting users in an unobtrusive way, as opposed to using the Javascript dialog (invoked through; alert("...");) -->
+<!-- technically, an a Bootstrap alert pane brings across alerts to users through an unobtrusive DIV element, which usually appears near the top/ at the top of a webpage -->
+<div class="alert alert-success hidden" role="alert" id="globalAlertPane" style="margin-bottom:0px">
+    <button type="button" class="close" data-hide="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <p>Bootstrap alert</p>
+</div>

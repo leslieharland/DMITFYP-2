@@ -1,0 +1,124 @@
+﻿@model WebApp.ViewModels.GroupViewGroupsViewModel
+@{
+    ViewBag.Title = "ViewGroups";
+}
+@Html.Partial("_AlertPane")
+@Html.Partial("Group.Modal", Model)
+<style>
+    .groupRoleDropDownList{
+        max-width: 100% !important;
+    }
+</style>
+    <script src="~/Scripts/require/group.js"></script>
+<div class="boxed" style="width: 1000px; min-height: 800px;">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10">
+        <h3>Add Group</h3>
+        <button type="button" class="btn btn-success" id="addGroupButton" style="width:300px">Add Group</button>
+        <div style="border:1px solid #ccc; margin-top:10px; margin-bottom:5px"></div>
+        <h3>Manage & View Groups</h3>
+        @{
+            string errorMessage = (string)ViewData["error"];
+            if (errorMessage != null)
+            {
+                <div class="jumbotron" style="width:auto"><h4>Sorry, no students are shown as the following error occured; @(errorMessage) Please contact your system administrator for assistance.</h4></div>
+                // Don't render the rest of the page given the error.
+                return;
+            }
+        }
+
+        @{
+            int iterationCount = 0;
+            var totalNumberOfGroups = (int)ViewData["totalNumberOfGroups"];
+            List<WebApp.Models.Student> listOfStudents = ((List<WebApp.Models.Student>)(Model.groupDetails.GetType().GetProperty("groupMembers").GetValue(Model.groupDetails, null)));
+        }
+        <button type="button" id="downloadProjectSelectionSpreadsheetButton" class="btn btn-success" data-loading-text="Crunching Data...">Download Group-Formation Spreadsheet</button>
+        <br />
+        <br />
+        <div class="form-inline@(totalNumberOfGroups == 0 ? " hidden" : "")" id="assignSupervisorAndProjectForGroupForm">
+            <div class="form-group">
+                <label for="supervisorToAssign">Assign Supervisor for Group:</label>
+                <input type="hidden" id="previousSupervisorToAssignHiddenField" value="@Model.supervisorToAssign" />
+                @Html.DropDownListFor(x => x.supervisorToAssign, Model.allSupervisors, "-- None Assigned --", new { @class = "form-control" })
+            </div>
+            <br/>
+            <br />
+            <div class="form-group">
+                <label for="projectToAssign">Assign Project for Group:</label>
+                <input type="hidden" id="previousProjectToAssignHiddenField" value="@Model.projectToAssign" />
+                @Html.DropDownListFor(x => x.projectToAssign, Model.allProjects, "-- None Assigned --", new { @class = "form-control", style="margin-left:26px"})
+            </div>
+        </div>
+        <table class="table table-bordered table-hover@(totalNumberOfGroups == 0 ? " hidden" : "")" id="groupTable" style="width:auto;margin-top:10px">
+            <thead>
+                <tr>
+                    <th>Group Number</th>
+                    <th>Admission Number</th>
+                    <th>Name</th>
+                    <th>Edit Member Role</th>
+                    <th>Delete Member</th>
+                    <th>Add Member</th>
+                    <th>Delete Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    if (listOfStudents != null)
+                    {
+                        if (listOfStudents.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5">No student(s) in Group @Model.groupDetails.GetType().GetProperty("groupNumber").GetValue(Model.groupDetails, null) yet.</td>
+                                <td rowspan="5" style="vertical-align:middle;text-align:center"><button type="button" class="btn btn-success btn-block addGroupMembersButton">Add</button></td>
+                                <td rowspan="5" style="vertical-align:middle;text-align:center">
+                                    <button type="button" class="btn btn-success btn-block deleteGroupButton">Delete</button>
+                                    <input type="hidden" id="groupIdHiddenField" value="@Model.groupDetails.GetType().GetProperty("groupId").GetValue(Model.groupDetails, null)" />
+                                </td>
+                            </tr>
+                        }
+
+                        foreach (var student in listOfStudents)
+                        {
+                            ++iterationCount;
+                            <tr>
+                                @{
+                                    if (iterationCount == 1)
+                                    {
+                                        <td rowspan="@listOfStudents.Count" style="vertical-align:middle;text-align:center"><strong>@Model.groupDetails.GetType().GetProperty("groupNumber").GetValue(Model.groupDetails, null)</strong></td>
+                                    }
+                                }
+                                <td>@student.admin_number</td>
+                                <td>@student.full_name</td>
+                                <td>
+                                    @Html.DropDownList(student.student_id + "studentIdGroupRole", Model.groupRoles, new { @class = "form-control groupRoleDropDownList", id = student.student_id + "studentIdGroupRole" })
+                                    <script>$("#@(student.student_id)studentIdGroupRole").val(@student.group_role); if (parseInt(@listOfStudents.Count) != 5) $("#@(student.student_id)studentIdGroupRole").attr("disabled", "disabled")</script>
+                                    <input type="hidden" id="previous@(student.student_id)studentIdGroupRoleHiddenField" value="@student.group_role" />
+                                </td>
+                                <td><button type="button" class="btn btn-success deleteGroupMemberButton" id="@(student.student_id)studentIdDeleteGroupMember">Delete</button></td>
+                                @{
+                                    if (iterationCount == 1)
+                                    {
+                                        <td rowspan="@listOfStudents.Count" style="vertical-align:middle;text-align:center"><button type="button" class="btn btn-success btn-block addGroupMembersButton" @(listOfStudents.Count == 5 ? "disabled" : "")>Add</button></td>
+                                        <td rowspan="@listOfStudents.Count" style="vertical-align:middle;text-align:center">
+                                            <button type="button" class="btn btn-success btn-block deleteGroupButton">Delete</button>
+                                            <input type="hidden" id="groupIdHiddenField" value="@Model.groupDetails.GetType().GetProperty("groupId").GetValue(Model.groupDetails, null)" />
+                                        </td>
+                                    }
+                                }
+                            </tr>
+                                        }
+                                    }
+                }
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-default@(totalNumberOfGroups == 0 ? " hidden" : "")" id="leftArrowViewGroup" disabled>
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        </button>
+        @{
+            <span id="groupNumberIndicationSpan" class="@(totalNumberOfGroups == 0 ? "hidden" : "")"><strong>1</strong> of <strong>@totalNumberOfGroups</strong></span>
+        }
+        <button type="button" class="btn btn-default@(totalNumberOfGroups == 0 ? " hidden" : "")" id="rightArrowViewGroup" @(totalNumberOfGroups == 1 ? "disabled" : "")>
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        </button>
+        <h4 id="noGroupsCreatedYetH4" class="@(totalNumberOfGroups == 0 ? "" : "hidden")">No groups created yet.</h4>
+    </div>
+</div>

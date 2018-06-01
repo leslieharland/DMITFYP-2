@@ -1,0 +1,74 @@
+﻿@using WebApp.ViewModels.Proposal
+@using WebApp.Infrastructure.AspNet
+@model IEnumerable<dynamic>
+<style>
+    #mytable > tbody > tr {
+        word-break: break-all;
+    }
+
+    #mytable > thead > tr > th {
+        background: #fff;
+    }
+
+    colgroup col.info {
+        background-color: #d9edf7;
+    }
+
+    .ic-right {
+        float: right;
+        display: none;
+        color: #999999;
+    }
+
+    .clicktoview {
+        text-decoration: none !important;
+        display: block;
+    }
+</style>
+<div style="width: 80%;" class="boxed push-down-45">
+    <div style="padding-bottom: 17px; margin-top: 30px;">
+        <div class="table-responsive" style="width: 100%;">
+            <table id="mytable" class="table table-hover">
+                <colgroup>
+                    <col />
+                    <col span="1" class="info" />
+                </colgroup>
+                <thead>
+                <th class="hidden">Id</th>
+                <th>Title</th>
+                <th width="150">Availability</th>
+                </thead>
+
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr onmouseover="$('#ic-right-@p.project_id').css('display', 'block');" onmouseout="$('#ic-right-@p.project_id').css('display', 'none');">
+                            <td class="hidden">@p.project_id</td>
+                            <td><a title="view" data-id="@p.project_id" class="view ml10 clicktoview" href="javascript:void(0)"><span onclick="location.href = $(this).closest('a').attr('href')" style="cursor: pointer !important;">@p.project_title</span><i class="ic-right glyphicon glyphicon-arrow-right" id="ic-right-@p.project_id"></i></a></td>
+                            <td>
+                                @if (p.project_availability)
+                                {
+                                    <i class="glyphicon glyphicon-ok"></i>
+                                }
+                                else
+                                {
+                                    <i class="glyphicon glyphicon-time"></i>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    var ViewLinkObj;
+ 
+    $(".clicktoview").click(function () {
+        ViewLinkObj = $(this);
+        var proposalid = ViewLinkObj[0].getAttribute("data-id");
+        location.href = '/proposal/details/' + proposalid;
+        return false;
+    });
+</script>

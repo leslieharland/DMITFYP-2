@@ -1,0 +1,47 @@
+﻿@model IEnumerable<WebApp.Models.Project>
+@{
+    ViewBag.Title = "Index";
+}
+<script>
+    $("document").ready(function () {
+        $("#downloadAvailableProjectsButton").click(function () {
+            $(this).button("loading");
+            window.location.href = "/Project/DownloadAvailableProjectsSpreadsheet";
+
+            var downloadProgressTimer = window.setInterval(function () {
+                if (getCookie("completedDownloadToken") == "downloaded") {
+                    $("#downloadAvailableProjectsButton").button("reset");
+                    setCookie("completedDownloadToken", "initial");
+                    clearInterval(downloadProgressTimer);
+                }
+            }, 1);
+        });
+    });
+</script>
+@{
+    int iterationCount = 0;
+}
+<div class="boxed" style="width: 1000px; min-height: 800px;">
+    <div class="col-sm-offset-1 col-xs-12 col-sm-10">
+        <h3>View Available Projects</h3>
+        <button id="downloadAvailableProjectsButton" type="button" data-loading-text="Crunching Data..." class="btn btn-success">Download Available Projects (Full Details)</button><br /><br/>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Project Title</th>
+                    <th>Project Brief</th>
+                </tr>
+            </thead>
+            @foreach (var p in Model)
+            {
+                ++iterationCount;
+                <tr>
+                    <td>@iterationCount</td>
+                    <td>@p.project_title</td>
+                    <td>@p.project_aims</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

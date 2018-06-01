@@ -1,0 +1,48 @@
+﻿
+@using ChameleonForms.Component.Config
+@using WebApp.Infrastructure.AspNet
+@using WebApp.ViewModels.Proposal
+@model WebApp.ViewModels.Proposal.ProposalViewModel
+<style>
+    textarea:focus::-webkit-input-placeholder {
+        opacity: 0;
+    }
+</style>
+<div class="p-container boxed">
+    <div class="col-sm-inset-1 col-xs-12">
+        <h4>Add proposal</h4>
+        <br /><br />
+        <div class="fbox-container fb1">
+            @using (var f = Html.BeginChameleonForm("/proposal/create"))
+            {
+                using (var s = f.BeginSection("Company Details", null))
+                {
+                    <p>@s.FieldFor(m => m.CompanyName)</p>
+                    <p>@s.FieldFor(m => m.Address)</p>
+                    <p>@s.FieldFor(m => m.Tel)</p>
+                    <p>@s.FieldFor(m => m.Fax)</p>
+                    <p>@s.FieldFor(m => m.Email)</p>
+                    <p>@s.FieldFor(m => m.LiaisonOfficer)</p>
+                    <p>@s.FieldFor(m => m.WillingToSponsor).InlineLabel("")</p>
+                }
+
+                using (var s = f.BeginSection("Project Outline", null, new { @class = "class" }.ToHtmlAttributes()))
+                {
+                    @s.FieldFor(m => m.Title).Cols(60).Rows(1).Label("Title").AutoFocus().TabIndex(1)
+                    @s.FieldFor(m => m.Aims).Cols(100).Rows(5).Label("Aims").Placeholder(DescriptionHelper.Aims.GetDisplayName())
+                    @s.FieldFor(m => m.Schedule).Cols(100).Rows(5).Label("Schedule").Placeholder(DescriptionHelper.Schedule.GetDisplayName())
+                    @s.FieldFor(m => m.Objectives).Cols(100).Rows(5).Label("Objectives").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.Objectives.GetDisplayName())
+                    @s.FieldFor(m => m.TargetAudience).Cols(100).Rows(3).Label("Target Audience").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.TargetAudience.GetDisplayName())
+                    @s.FieldFor(m => m.MainFunction).Cols(100).Rows(5).Label("Main function/ Deliverables").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.MainFunctionsAndDeliverables.GetDisplayName())
+                    @s.FieldFor(m => m.HardwareAndSoftwareConfiguration).Cols(100).Rows(5).Label("Hardware and software requirements").AutoFocus().TabIndex(1).Placeholder(DescriptionHelper.HardwareAndSoftwareRequirements.GetDisplayName())
+                    @s.FieldFor(m => m.ReadyForApproval)
+                }
+                using (var n = f.BeginNavigation())
+                {
+                    <button type="submit" name="Save">Save</button>
+                    @n.Submit("Submit", "Submit")
+                }
+            }
+            </div>
+        </div>
+    </div>
