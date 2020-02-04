@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -11,6 +12,8 @@ using WebApp.ViewModels;
 using WebApp.Formatters;
 using WebApp.Infrastructure.AspNet;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using static WebApp.Constants;
 
 namespace WebApp.Controllers
 {
@@ -20,17 +23,21 @@ namespace WebApp.Controllers
         private readonly IGroupRepository groupRepository;
 
         private readonly IProjectRepository projectRepository;
-        private readonly LecturerRepository lecturerRepository;
+        private readonly ILecturerRepository lecturerRepository;
         private readonly IStudentRepository studentRepository;
         private readonly IProjectChoiceRepository projectChoiceRepository;
 
-        public GroupController()
+        public GroupController(IGroupRepository groupRepository,
+                               IProjectRepository projectRepository,
+                               ILecturerRepository lecturerRepository,
+                               IStudentRepository studentRepository,
+                               IProjectChoiceRepository projectChoiceRepository)
         {
-            groupRepository = new GroupRepository();
-            projectRepository = new ProjectRepository();
-            lecturerRepository = new LecturerRepository();
-            studentRepository = new StudentRepository();
-            projectChoiceRepository = new ProjectChoiceRepository();
+            this.groupRepository = groupRepository;
+            this.projectRepository = projectRepository;
+            this.lecturerRepository = lecturerRepository;
+            this.studentRepository = studentRepository;
+            this.projectChoiceRepository = projectChoiceRepository;
         }
 
         public ActionResult DeleteGroup(int groupId)
@@ -71,18 +78,20 @@ namespace WebApp.Controllers
 
         public ActionResult DownloadInvalidStudentsFile(int[] invalidStudentIds, string[] reasonsForInvalidity)
         {
-            //Response.Clear();
-            //Response.AddHeader("Content-Disposition", "attachment; filename=" + "InvalidStudents_" + DateTime.Now.ToString("G") + ".txt");
-            //Response.ContentType = "text/plain";
-            //Response.Write("Invalid student(s) who were not added to the group:\r\n");
-            //for (int i = 0; i < invalidStudentIds.Length; ++i)
-            //{
-            //    Student s;
-            //    s = studentRepository.GetStudentByStudentId(invalidStudentIds[i]);
-            //    Response.Write(s.full_name + " (" + s.admin_number + ") --> " + reasonsForInvalidity[i] + "\r\n");
-            //}
-            //Response.End();
-            return null;
+            Response.Clear();
+            CookieOptions options = new CookieOptions();
+            options.Expires = DateTime.Now.AddMilliseconds(8000);
+            Response.Headers.Append("Content-Disposition", "attachment; filename=" + "InvalidStudents_" + DateTime.Now.ToString("G") + ".txt");
+
+            Response.ContentType = "text/plain";
+            Response.WriteAsync("Invalid student(s) who were not added to the group:\r\n");
+            for (int i = 0; i < invalidStudentIds.Length; ++i)
+            {
+                Student s;
+                s = studentRepository.GetStudentByStudentId(invalidStudentIds[i]);
+                Response.WriteAsync(s.full_name + " (" + s.admin_number + ") --> " + reasonsForInvalidity[i] + "\r\n");
+            }
+            return Ok();
         }
 
         public ActionResult DownloadProjectSelectionSpreadsheet()
@@ -92,7 +101,7 @@ namespace WebApp.Controllers
             string cellReference = "A2";
             string fileName = "ProjectSelectionSpreadsheet_" + DateTime.Now.ToString("G") + ".xlsx";
             List<string> headerRow = new List<string>();
-            IProjectRepository projectRepository = new ProjectRepository();
+
             IEnumerable<Project> allAvailableProjects = new List<Project>();
             MemoryStream memoryStream = new MemoryStream();
             DocumentFormat.OpenXml.Spreadsheet.SheetData sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
@@ -119,11 +128,11 @@ namespace WebApp.Controllers
             stylesheet = ExcelFormatter.CreateStyles(fonts, foregroundColors, backgroundColors, alignments);
             spreadsheetDocument = ExcelFormatter.CreateExcelSpreadsheet(ref memoryStream);
             ExcelFormatter.InitializeSpreadsheet(ref spreadsheetDocument, stylesheet);
-            
+
             List<List<string>> spreadsheetData = groupRepository.GetGroupProjectSelectionSpreadsheetData(courseId);
 
             allAvailableProjects = projectRepository.GetAvailableProjects(courseId);
-            headerRow.AddRange(new string[] { "Group#", "Student ID", "Student Name", "Mobile", "Personal Email"});
+            headerRow.AddRange(new string[] { "Group#", "Student ID", "Student Name", "Mobile", "Personal Email" });
             foreach (Project p in allAvailableProjects)
             {
                 headerRow.Add(p.project_title);
@@ -138,8 +147,10 @@ namespace WebApp.Controllers
             ExcelFormatter.FinalizeSpreadsheetWriting(ref spreadsheetDocument, ref sheetData);
 
             memoryStream.Seek(0, SeekOrigin.Begin);
-            Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
-            Response.Cookies.Add(new System.Web.HttpCookie("completedDownloadToken", "downloaded"));
+            Response.Headers.Add("Content-Disposition", "attachment; filename=" + fileName);
+            CookieOptions options = new CookieOptions();
+            options.Expires = DateTime.Now.AddMilliseconds(8000);
+            Response.Cookies.Append("completedDownloadToken", "downloaded", options);
             return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
 
@@ -208,7 +219,7 @@ namespace WebApp.Controllers
                     var group = groupRepository.GetGroup(1, courseId);
                     var view = new GroupLecturerViewGroupsViewModel() { groupDetails = group };
                     view.init(supervisors, projects);
-                    
+
                     ViewData["totalNumberOfGroups"] = groupRepository.GetNumberOfGroups(courseId);
                     return View("~/Views/Group/LecturerViewGroups.cshtml", view);
                 }
@@ -268,7 +279,7 @@ namespace WebApp.Controllers
                     ViewData["totalNumberOfGroups"] = groupRepository.GetNumberOfGroups(courseId);
                     ViewData["projects"] = projectSelectListItems;
                     ViewData["projectChoices"] = projectChoices;
-                    
+
                     return View("~/Views/Group/StudentViewGroups.cshtml", view);
                 }
                 catch (Exception e)
@@ -293,7 +304,7 @@ namespace WebApp.Controllers
 
         public ActionResult ViewGroups(GroupViewGroupsViewModel model)
         {
-            int courseId = HttpContext.Session.GetInt32("CourseId") ?? default(int);
+            int courseId = HttpContext.Session.GetInt32(CID) ?? default(int);
 
             if (model.groupNumber == null)
             {
@@ -306,13 +317,14 @@ namespace WebApp.Controllers
                     var view = new GroupViewGroupsViewModel() { groupDetails = groups };
                     view.init(supervisors, projects, students);
                     ViewData["totalNumberOfGroups"] = groupRepository.GetNumberOfGroups(courseId);
-                    return View("~/Views/Group/ViewGroups.cshtml",view);
+                    return View("~/Views/Group/ViewGroups.cshtml", view);
                 }
                 catch (Exception e)
                 {
                     ViewData["error"] = e.Message;
-					return View("~/Views/Group/ViewGroups.cshtml");
+                    return RedirectToAction("Tsst");
                 }
+
             }
             else
             {
@@ -376,7 +388,7 @@ namespace WebApp.Controllers
 
             try
             {
-                int courseId = HttpContext.Session.GetInt32("CourseId") ?? default(int);
+                int courseId = HttpContext.Session.GetInt32(CID) ?? default(int);
                 string prospectiveGroupNumber = groupRepository.GetProspectiveGroupNumber(courseId);
                 numberOfRowsAffected = groupRepository.CreateGroup(new Models.Group()
                 {
@@ -423,4 +435,4 @@ namespace WebApp.Controllers
             }
         }
     }
-    }
+}

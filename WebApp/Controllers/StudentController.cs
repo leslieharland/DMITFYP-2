@@ -206,7 +206,7 @@ namespace WebApp.Controllers
             {
                 XDocument xDocument = WebApp.Formatters.XmlReader.ReadXmlDocument(Constants.PersistentDataXmlVirtualFilePath);
                 int semester = DateTime.Parse(WebApp.Formatters.XmlReader.GetNodeValue(ref xDocument, "/PersistentData/XmlFileCreatedDate")).Month == 2 ? 1 : 2;
-                string urlEmbeddedAccountActivationToken = studentRepository.GenerateRandomUrlEmbeddedAccountActivationToken();
+                
 
                 numberOfRowsAffected = studentRepository.CreateStudent(new Student()
                 {

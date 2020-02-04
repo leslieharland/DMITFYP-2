@@ -9,7 +9,7 @@ namespace WebApp.DAL
         IEnumerable<ProposalViewModel> GetForLecturer(Lecturer lecturer);
         IEnumerable<ProposalViewModel> Get(Lecturer lecturer, int saved = 0);
         dynamic GetProposalById(int Id);
-        int AddProposal(ProposalViewModel proposal, int lecturerId, int courseId);
+        void AddProposal(ProposalViewModel proposal, int lecturerId, int courseId);
         void UpdateProposal(ProposalViewModel proposal);
 
         void DeleteProposals(List<int> Ids);

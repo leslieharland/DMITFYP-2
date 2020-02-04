@@ -130,9 +130,13 @@ namespace WebApp.DAL
 			}
 		}
 
-		public Student GetStudentById(int studentId)
+		public Student GetStudentById(string studentId)
 		{
-			throw new NotImplementedException();
+			using (var connection = new SqlConnection(connectionString))
+            {
+				return connection.Query<Student>("Select * from Student where student_id = @studentId", new { studentId }).FirstOrDefault();
+
+            }
 		}
 
 		//public bool RequireNewPassword(string passwordLink, string password)
@@ -192,8 +196,7 @@ namespace WebApp.DAL
 				{
 					var p = new DynamicParameters();
 					p.Add("@" + Student.EmailAddressDatabaseColumnName, value: emailAddress, dbType: DbType.String, size: 50);
-
-					connection.Open();
+                  
 					var numberOfDuplicates = connection.Query<int>("getNumberOfStudentsWithSameEmailAddressSP", p, commandType: CommandType.StoredProcedure).SingleOrDefault();
 					return numberOfDuplicates > 0;
 				}
@@ -211,8 +214,7 @@ namespace WebApp.DAL
 				{
 					var p = new DynamicParameters();
 					p.Add("@" + Student.AdminNumberDatabaseColumnName, value: adminNumber, dbType: DbType.String, size: 7);
-
-					connection.Open();
+     
 					var numberOfDuplicates = connection.Query<int>("getNumberOfStudentsWithSameAdminNumberSP", p, commandType: CommandType.StoredProcedure).SingleOrDefault();
 					return numberOfDuplicates > 0;
 				}
@@ -236,7 +238,6 @@ namespace WebApp.DAL
 					p.Add("@interval", value: paginationDetails.interval, dbType: DbType.Int32);
 					p.Add("@" + Student.CourseIdDatabaseColumnName, value: courseId, dbType: DbType.Int32);
 
-					connection.Open();
 					var students = connection.Query<Student>("getStudentsWithPartialFullNameFilterSP", p, commandType: CommandType.StoredProcedure);
 					return students;
 				}
@@ -252,7 +253,7 @@ namespace WebApp.DAL
 			{
 				using (var connection = GetConnection())
 				{
-					connection.Open();
+				
 					var student = connection.Query<Student>("SELECT * FROM " + Student.StudentDatabaseTableName + " WHERE " + Student.StudentIdDatabaseColumnName + " = @studentId", new { studentId }).SingleOrDefault();
 					return student;
 				}
@@ -269,7 +270,7 @@ namespace WebApp.DAL
 			{
 				using (var connection = GetConnection())
 				{
-					connection.Open();
+				
 					var numberOfRowsAffected = connection.Execute("UPDATE " + Student.StudentDatabaseTableName + " SET " + Student.GroupRoleDatabaseColumnName + " = @groupRole WHERE " + Student.StudentIdDatabaseColumnName + " = @studentId", new { groupRole, studentId });
 					return numberOfRowsAffected;
 				}
@@ -306,7 +307,6 @@ namespace WebApp.DAL
 					p.Add("@partial_full_name", value: partialFullName, dbType: DbType.String, size: 50);
 					p.Add("@" + Student.CourseIdDatabaseColumnName, value: courseId, dbType: DbType.Int32);
 
-					connection.Open();
 					var totalNumberOfStudents = connection.Query<int>("getNumberOfStudentsWithPartialFullNameFilterSP", p, commandType: CommandType.StoredProcedure).SingleOrDefault();
 					return totalNumberOfStudents;
 				}
@@ -350,7 +350,7 @@ namespace WebApp.DAL
 					p.Add("@" + Student.GroupRoleDatabaseColumnName, value: groupRole, dbType: DbType.String, size: 1);
 					p.Add("@" + Student.GroupIdDatabaseColumnName, value: groupId, dbType: DbType.Int32);
 
-					connection.Open();
+			
 					var numberOfRowsAffected = connection.Execute("setStudentGroupRoleAndGroupIdSP", p, commandType: CommandType.StoredProcedure);
 					return numberOfRowsAffected;
 				}
@@ -375,15 +375,12 @@ namespace WebApp.DAL
 					p.Add("@" + Student.MobileNumberDatabaseColumnName, value: student.mobile_number, dbType: DbType.String, size: 8);
 					p.Add("@" + Student.EmailAddressDatabaseColumnName, value: student.email_address, dbType: DbType.String, size: 50);
 					p.Add("@" + Student.GroupRoleDatabaseColumnName, value: student.group_role, dbType: DbType.String, size: 1);
-
 					p.Add("@" + Student.YearDatabaseColumnName, value: student.year, dbType: DbType.Int32);
 					p.Add("@" + Student.SemesterDatabaseColumnName, value: student.semester, dbType: DbType.Int32);
 					p.Add("@" + Student.CompletedModuleDatabaseColumnName, value: student.completed_module, dbType: DbType.Boolean);
 					p.Add("@" + Student.GroupIdDatabaseColumnName, value: student.group_id, dbType: DbType.Int32);
 					p.Add("@" + Student.CourseIdDatabaseColumnName, value: student.course_id, dbType: DbType.Int32);
 
-
-					connection.Open();
 					var numberOfRowsAffected = connection.Execute("createStudentSP", p, commandType: CommandType.StoredProcedure);
 					return numberOfRowsAffected;
 				}
@@ -415,7 +412,7 @@ namespace WebApp.DAL
 			{
 				using (var connection = GetConnection())
 				{
-					connection.Open();
+
 
 					var students = connection.Query<Student>("SELECT * FROM " + Student.StudentDatabaseTableName + " WHERE (" + Student.CourseIdDatabaseColumnName + " = @courseId" + " AND " + Student.CompletedModuleDatabaseColumnName + " = 0)", new { courseId });
 					return students;
@@ -432,15 +429,15 @@ namespace WebApp.DAL
 			throw new NotImplementedException();
 		}
 
-		public Student GetStudent(string admin)
+		public Student GetStudent(string admin_number)
 		{
-			throw new NotImplementedException();
+			using (var connection = new SqlConnection(connectionString))
+            {
+				return connection.Query<Student>("Select * from Student where admin_number = @admin_number", new { admin_number }).FirstOrDefault();
+
+            }
 		}
 
-
-		public string GenerateRandomUrlEmbeddedAccountActivationToken()
-		{
-			throw new NotImplementedException();
-		}
+       
 	}
 }
