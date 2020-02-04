@@ -1,5 +1,4 @@
-﻿using ChameleonForms.Component.Config;
-using WebApp.Filter;
+﻿using WebApp.Filter;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,7 +32,7 @@ namespace WebApp.ViewModels
         public class InitiatedProjectViewModel
         {
             [Display(Name = "Group no. ")]
-            public int GroupId { get; set;}
+            public int GroupId { get; set; }
             [ScaffoldColumn(false)]
             [ExcludeProperty]
             public int Id { get; set; }
@@ -230,12 +229,10 @@ namespace WebApp.ViewModels
             public string LiaisonOfficer { get; set; }
 
             [Required]
-            public bool WillingToSponsor { get; set; }
+            [Display(Name = "Willing to sponsor")]
+            public Boolean WillingToSponsor { get; set; }
 
-            public IFieldConfiguration ModifyConfig(IFieldConfiguration config)
-            {
-                return config;
-            }
+        
             [ExcludeProperty]
             public int LecturerId { get; set; }
             [ExcludeProperty]

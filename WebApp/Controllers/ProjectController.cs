@@ -16,6 +16,8 @@ using WebApp.Formatters;
 using WebApp.Infrastructure.AspNet;
 using WebApp.ViewModels.InitiatedProject;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Xceed.Words.NET;
 
 namespace WebApp.Controllers
 {
@@ -26,15 +28,18 @@ namespace WebApp.Controllers
         private readonly IProposalRepository _proposalctx;
         private readonly IStudentRepository _studentctx;
         private static ICollection<Project> _projects;
+		private readonly IHostingEnvironment environment;
 
 
         public ProjectController(IProjectRepository project,
 		                         IStudentRepository student, 
-		                         IProposalRepository proposal)
+		                         IProposalRepository proposal,
+		                         IHostingEnvironment environment)
         {
             _projectctx = project;
             _studentctx = student;
             _proposalctx = proposal;
+			this.environment = environment;
         }
 
         public ActionResult StudentIndex()
@@ -69,7 +74,7 @@ namespace WebApp.Controllers
 
         public ActionResult SelfInitiated()
         {
-			Student student = _studentctx.GetStudent(User.Identity.Name);
+			Student student = _studentctx.GetStudent(User.Identity.Name.Substring(1, User.Identity.Name.Length -1));
 
             if (student.group_id == null)
             {
@@ -252,11 +257,13 @@ namespace WebApp.Controllers
             List<string> headerRow = new List<string>();
             MemoryStream memoryStream = new MemoryStream();
             DocumentFormat.OpenXml.Spreadsheet.SheetData sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
-            List<Font> fonts = new List<Font>();
-            fonts.Add(new Font(new Bold()));
-            fonts.Add(new Font());
+			List<DocumentFormat.OpenXml.Spreadsheet.Font> fonts = new List<DocumentFormat.OpenXml.Spreadsheet.Font>
+			{
+				new DocumentFormat.OpenXml.Spreadsheet.Font(new Bold()),
+				new DocumentFormat.OpenXml.Spreadsheet.Font()
+			};
 
-            List<ForegroundColor> foregroundColors = new List<ForegroundColor>();
+			List<ForegroundColor> foregroundColors = new List<ForegroundColor>();
             foregroundColors.Add(new ForegroundColor { Rgb = HexBinaryValue.FromString("FFD633") });
             foregroundColors.Add(new ForegroundColor { Rgb = HexBinaryValue.FromString("FFFFFF") });
 
@@ -285,8 +292,12 @@ namespace WebApp.Controllers
             }
             ExcelFormatter.FinalizeSpreadsheetWriting(ref spreadsheetDocument, ref sheetData);
             memoryStream.Seek(0, SeekOrigin.Begin);
-            Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
-            Response.Cookies.Add(new System.Web.HttpCookie("completedDownloadToken", "downloaded"));
+			Response.Headers.Add("Content-Disposition", "attachment; filename=" + fileName);
+			CookieOptions options = new CookieOptions
+			{
+				Expires = DateTime.Now.AddMilliseconds(8000)
+			};
+			Response.Cookies.Append("completedDownloadToken", "downloaded", options);
             return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
 
@@ -295,7 +306,7 @@ namespace WebApp.Controllers
         {
             InitiatedProjectViewModel proposal = _proposalctx.GetProposalById(id);
             string templateName = "External_Project_Proposal.docx";
-            string path = Path.Combine(Server.MapPath("~/App_Data/Generated"), templateName);
+			string path = Path.Combine(environment.ContentRootPath, "~/App_Data/Generated", templateName);
             string downloadPath = string.Format(@"{0}{1}.docx", path, "-" + proposal.Title);
 
 
@@ -316,17 +327,17 @@ namespace WebApp.Controllers
 
             using (DocX doc = DocX.Load(path))
             {
-                doc.AddCustomProperty(new Novacode.CustomProperty("ProjectTitle", proposal.Title));
-                doc.AddCustomProperty(new Novacode.CustomProperty("ProjectOverview", proposal.ProjectOverview));
-                doc.AddCustomProperty(new Novacode.CustomProperty("IntroBackground", proposal.IntroBackground));
-                doc.AddCustomProperty(new Novacode.CustomProperty("Approach", proposal.KeyInnovationAndResearchGoals));
-                doc.AddCustomProperty(new Novacode.CustomProperty("ComparisonMerits", proposal.ComparisonOfTheMerits));
-                doc.AddCustomProperty(new Novacode.CustomProperty("TargetAudience", proposal.TargetAudience));
-                doc.AddCustomProperty(new Novacode.CustomProperty("BusinessModel", proposal.BusinessModelAndMarketPotential));
-                doc.AddCustomProperty(new Novacode.CustomProperty("MainFunction", proposal.MainFunction));
-                doc.AddCustomProperty(new Novacode.CustomProperty("ProjectPlan", proposal.ProjectPlan));
-                doc.AddCustomProperty(new Novacode.CustomProperty("HardwareAndSoftwareRequirements", proposal.HardwareAndSoftwareRequirements));
-                doc.AddCustomProperty(new Novacode.CustomProperty("ProblemsAndCountermeasures", proposal.ProblemsAndCountermeasures));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("ProjectTitle", proposal.Title));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("ProjectOverview", proposal.ProjectOverview));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("IntroBackground", proposal.IntroBackground));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("Approach", proposal.KeyInnovationAndResearchGoals));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("ComparisonMerits", proposal.ComparisonOfTheMerits));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("TargetAudience", proposal.TargetAudience));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("BusinessModel", proposal.BusinessModelAndMarketPotential));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("MainFunction", proposal.MainFunction));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("ProjectPlan", proposal.ProjectPlan));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("HardwareAndSoftwareRequirements", proposal.HardwareAndSoftwareRequirements));
+                doc.AddCustomProperty(new Xceed.Words.NET.CustomProperty("ProblemsAndCountermeasures", proposal.ProblemsAndCountermeasures));
                 doc.SaveAs(downloadPath);
             }
             return File(downloadPath, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(downloadPath));
@@ -339,13 +350,14 @@ namespace WebApp.Controllers
             string cellReference = "A2";
             string fileName = "Industry-LecturerProposalsSpreadsheet_" + DateTime.Now.ToString("G") + ".xlsx";
             List<string> headerRow = new List<string>();
-            MemoryStream memoryStream = new MemoryStream();
+            var memoryStream = new MemoryStream();
             DocumentFormat.OpenXml.Spreadsheet.SheetData sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
 
-            List<Font> fonts = new List<Font>();
-            fonts.Add(new Font(new Bold()));
-            fonts.Add(new Font());
-
+			List<DocumentFormat.OpenXml.Spreadsheet.Font> fonts = new List<DocumentFormat.OpenXml.Spreadsheet.Font>
+            {
+                new DocumentFormat.OpenXml.Spreadsheet.Font(new Bold()),
+                new DocumentFormat.OpenXml.Spreadsheet.Font()
+            };
             List<ForegroundColor> foregroundColors = new List<ForegroundColor>();
             foregroundColors.Add(new ForegroundColor { Rgb = HexBinaryValue.FromString("FFD633") });
             foregroundColors.Add(new ForegroundColor { Rgb = HexBinaryValue.FromString("FFFFFF") });
@@ -375,8 +387,8 @@ namespace WebApp.Controllers
             }
             ExcelFormatter.FinalizeSpreadsheetWriting(ref spreadsheetDocument, ref sheetData);
             memoryStream.Seek(0, SeekOrigin.Begin);
-            Response.AddHeader("Content-Disposition", "attachement; filename=" + fileName);
-            Response.Cookies.Add(new System.Web.HttpCookie("completedDownloadToken", "downloaded"));
+			Response.Headers.Add("Content-Disposition", "attachement; filename=" + fileName);
+			Response.Cookies.Append("completedDownloadToken", "downloaded");
             return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
 
@@ -389,9 +401,11 @@ namespace WebApp.Controllers
             List<string> headerRow = new List<string>();
             MemoryStream memoryStream = new MemoryStream();
             DocumentFormat.OpenXml.Spreadsheet.SheetData sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
-            List<Font> fonts = new List<Font>();
-            fonts.Add(new Font(new Bold()));
-            fonts.Add(new Font());
+			List<DocumentFormat.OpenXml.Spreadsheet.Font> fonts = new List<DocumentFormat.OpenXml.Spreadsheet.Font>
+            {
+                new DocumentFormat.OpenXml.Spreadsheet.Font(new Bold()),
+                new DocumentFormat.OpenXml.Spreadsheet.Font()
+            };
 
             List<ForegroundColor> foregroundColors = new List<ForegroundColor>();
             foregroundColors.Add(new ForegroundColor { Rgb = HexBinaryValue.FromString("FFD633") });
@@ -423,8 +437,8 @@ namespace WebApp.Controllers
             }
             ExcelFormatter.FinalizeSpreadsheetWriting(ref spreadsheetDocument, ref sheetData);
             memoryStream.Seek(0, SeekOrigin.Begin);
-            Response.AddHeader("Content-Disposition", "attachement; filename=" + fileName);
-            Response.Cookies.Add(new System.Web.HttpCookie("completedDownloadToken", "downloaded"));
+			Response.Headers.Add("Content-Disposition", "attachement; filename=" + fileName);
+			Response.Cookies.Append("completedDownloadToken", "downloaded", new CookieOptions(){Expires = DateTime.Now.AddSeconds(8)});
             return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
     }

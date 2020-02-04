@@ -19,6 +19,9 @@ namespace WebApp.DAL
             connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
+		public UploadService(){
+
+		}
 
         private IDbConnection GetConnection()
         {
